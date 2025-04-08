@@ -103,6 +103,53 @@ export class PrismaClient<
   $use(cb: Prisma.Middleware): void
 
 /**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
+
+
+  /**
    * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
    * @example
    * ```
@@ -115,24 +162,10 @@ export class PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P]): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
-  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number }): $Utils.JsPromise<R>
+  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
 
-  /**
-   * Executes a raw MongoDB command and returns the result of it.
-   * @example
-   * ```
-   * const user = await prisma.$runCommandRaw({
-   *   aggregate: 'User',
-   *   pipeline: [{ $match: { name: 'Bob' } }, { $project: { email: true, _id: false } }],
-   *   explain: false,
-   * })
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $runCommandRaw(command: Prisma.InputJsonObject): Prisma.PrismaPromise<Prisma.JsonObject>
 
   $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb<ClientOptions>, ExtArgs, $Utils.Call<Prisma.TypeMapCb<ClientOptions>, {
     extArgs: ExtArgs
@@ -629,7 +662,7 @@ export namespace Prisma {
     }
     meta: {
       modelProps: "user" | "ticket" | "scanTicket"
-      txIsolationLevel: never
+      txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
       User: {
@@ -664,6 +697,10 @@ export namespace Prisma {
             args: Prisma.UserCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+          }
           delete: {
             args: Prisma.UserDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$UserPayload>
@@ -680,6 +717,10 @@ export namespace Prisma {
             args: Prisma.UserUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          updateManyAndReturn: {
+            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+          }
           upsert: {
             args: Prisma.UserUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$UserPayload>
@@ -691,14 +732,6 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.UserGroupByArgs<ExtArgs>
             result: $Utils.Optional<UserGroupByOutputType>[]
-          }
-          findRaw: {
-            args: Prisma.UserFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.UserAggregateRawArgs<ExtArgs>
-            result: JsonObject
           }
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
@@ -738,6 +771,10 @@ export namespace Prisma {
             args: Prisma.TicketCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.TicketCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TicketPayload>[]
+          }
           delete: {
             args: Prisma.TicketDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$TicketPayload>
@@ -754,6 +791,10 @@ export namespace Prisma {
             args: Prisma.TicketUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          updateManyAndReturn: {
+            args: Prisma.TicketUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TicketPayload>[]
+          }
           upsert: {
             args: Prisma.TicketUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$TicketPayload>
@@ -765,14 +806,6 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.TicketGroupByArgs<ExtArgs>
             result: $Utils.Optional<TicketGroupByOutputType>[]
-          }
-          findRaw: {
-            args: Prisma.TicketFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.TicketAggregateRawArgs<ExtArgs>
-            result: JsonObject
           }
           count: {
             args: Prisma.TicketCountArgs<ExtArgs>
@@ -812,6 +845,10 @@ export namespace Prisma {
             args: Prisma.ScanTicketCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.ScanTicketCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanTicketPayload>[]
+          }
           delete: {
             args: Prisma.ScanTicketDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$ScanTicketPayload>
@@ -828,6 +865,10 @@ export namespace Prisma {
             args: Prisma.ScanTicketUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          updateManyAndReturn: {
+            args: Prisma.ScanTicketUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanTicketPayload>[]
+          }
           upsert: {
             args: Prisma.ScanTicketUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$ScanTicketPayload>
@@ -840,14 +881,6 @@ export namespace Prisma {
             args: Prisma.ScanTicketGroupByArgs<ExtArgs>
             result: $Utils.Optional<ScanTicketGroupByOutputType>[]
           }
-          findRaw: {
-            args: Prisma.ScanTicketFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.ScanTicketAggregateRawArgs<ExtArgs>
-            result: JsonObject
-          }
           count: {
             args: Prisma.ScanTicketCountArgs<ExtArgs>
             result: $Utils.Optional<ScanTicketCountAggregateOutputType> | number
@@ -859,9 +892,21 @@ export namespace Prisma {
     other: {
       payload: any
       operations: {
-        $runCommandRaw: {
-          args: Prisma.InputJsonObject,
-          result: Prisma.JsonObject
+        $executeRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $executeRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
+        }
+        $queryRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $queryRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
         }
       }
     }
@@ -907,6 +952,7 @@ export namespace Prisma {
     transactionOptions?: {
       maxWait?: number
       timeout?: number
+      isolationLevel?: Prisma.TransactionIsolationLevel
     }
     /**
      * Global configuration for omitting model fields by default.
@@ -1089,12 +1135,22 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
 
+  export type UserAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    id: number | null
+  }
+
   export type UserMinAggregateOutputType = {
-    id: string | null
+    id: number | null
     email: string | null
     firstname: string | null
     lastname: string | null
@@ -1103,7 +1159,7 @@ export namespace Prisma {
   }
 
   export type UserMaxAggregateOutputType = {
-    id: string | null
+    id: number | null
     email: string | null
     firstname: string | null
     lastname: string | null
@@ -1121,6 +1177,14 @@ export namespace Prisma {
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    id?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -1188,6 +1252,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -1218,18 +1294,22 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
 
   export type UserGroupByOutputType = {
-    id: string
+    id: number
     email: string
     firstname: string
     lastname: string
     password: string
     createdAt: Date
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -1259,7 +1339,23 @@ export namespace Prisma {
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
+  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    password?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["user"]>
 
+  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    password?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
@@ -1275,6 +1371,8 @@ export namespace Prisma {
     tickets?: boolean | User$ticketsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -1282,7 +1380,7 @@ export namespace Prisma {
       tickets: Prisma.$TicketPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
-      id: string
+      id: number
       email: string
       firstname: string
       lastname: string
@@ -1406,6 +1504,30 @@ export namespace Prisma {
     createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many Users and returns the data saved in the database.
+     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
+     * @example
+     * // Create many Users
+     * const user = await prisma.user.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Delete a User.
      * @param {UserDeleteArgs} args - Arguments to delete one User.
      * @example
@@ -1470,6 +1592,36 @@ export namespace Prisma {
     updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Update zero or more Users and returns the data updated in the database.
+     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
+     * @example
+     * // Update many Users
+     * const user = await prisma.user.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Create or update one User.
      * @param {UserUpsertArgs} args - Arguments to update or create a User.
      * @example
@@ -1487,29 +1639,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more Users that matches the filter.
-     * @param {UserFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const user = await prisma.user.findRaw({
-     *   filter: { age: { $gt: 25 } }
-     * })
-     */
-    findRaw(args?: UserFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a User.
-     * @param {UserAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const user = await prisma.user.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: UserAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -1681,7 +1810,7 @@ export namespace Prisma {
    * Fields of the User model
    */ 
   interface UserFieldRefs {
-    readonly id: FieldRef<"User", 'String'>
+    readonly id: FieldRef<"User", 'Int'>
     readonly email: FieldRef<"User", 'String'>
     readonly firstname: FieldRef<"User", 'String'>
     readonly lastname: FieldRef<"User", 'String'>
@@ -1916,6 +2045,26 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * User createManyAndReturn
+   */
+  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * The data used to create many Users.
+     */
+    data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -1948,6 +2097,32 @@ export namespace Prisma {
    * User updateMany
    */
   export type UserUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Users.
+     */
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
+    /**
+     * Filter which Users to update
+     */
+    where?: UserWhereInput
+    /**
+     * Limit how many Users to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * User updateManyAndReturn
+   */
+  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
     /**
      * The data used to update Users.
      */
@@ -2029,34 +2204,6 @@ export namespace Prisma {
   }
 
   /**
-   * User findRaw
-   */
-  export type UserFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * User aggregateRaw
-   */
-  export type UserAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
    * User.tickets
    */
   export type User$ticketsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2113,24 +2260,26 @@ export namespace Prisma {
 
   export type TicketAvgAggregateOutputType = {
     price: number | null
+    userId: number | null
   }
 
   export type TicketSumAggregateOutputType = {
     price: number | null
+    userId: number | null
   }
 
   export type TicketMinAggregateOutputType = {
     lotNumber: string | null
     name: string | null
     price: number | null
-    userId: string | null
+    userId: number | null
   }
 
   export type TicketMaxAggregateOutputType = {
     lotNumber: string | null
     name: string | null
     price: number | null
-    userId: string | null
+    userId: number | null
   }
 
   export type TicketCountAggregateOutputType = {
@@ -2144,10 +2293,12 @@ export namespace Prisma {
 
   export type TicketAvgAggregateInputType = {
     price?: true
+    userId?: true
   }
 
   export type TicketSumAggregateInputType = {
     price?: true
+    userId?: true
   }
 
   export type TicketMinAggregateInputType = {
@@ -2262,7 +2413,7 @@ export namespace Prisma {
     lotNumber: string
     name: string
     price: number
-    userId: string
+    userId: number
     _count: TicketCountAggregateOutputType | null
     _avg: TicketAvgAggregateOutputType | null
     _sum: TicketSumAggregateOutputType | null
@@ -2294,7 +2445,21 @@ export namespace Prisma {
     _count?: boolean | TicketCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["ticket"]>
 
+  export type TicketSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    lotNumber?: boolean
+    name?: boolean
+    price?: boolean
+    userId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["ticket"]>
 
+  export type TicketSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    lotNumber?: boolean
+    name?: boolean
+    price?: boolean
+    userId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["ticket"]>
 
   export type TicketSelectScalar = {
     lotNumber?: boolean
@@ -2309,6 +2474,12 @@ export namespace Prisma {
     scanTickets?: boolean | Ticket$scanTicketsArgs<ExtArgs>
     _count?: boolean | TicketCountOutputTypeDefaultArgs<ExtArgs>
   }
+  export type TicketIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type TicketIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
 
   export type $TicketPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Ticket"
@@ -2320,7 +2491,7 @@ export namespace Prisma {
       lotNumber: string
       name: string
       price: number
-      userId: string
+      userId: number
     }, ExtArgs["result"]["ticket"]>
     composites: {}
   }
@@ -2439,6 +2610,30 @@ export namespace Prisma {
     createMany<T extends TicketCreateManyArgs>(args?: SelectSubset<T, TicketCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many Tickets and returns the data saved in the database.
+     * @param {TicketCreateManyAndReturnArgs} args - Arguments to create many Tickets.
+     * @example
+     * // Create many Tickets
+     * const ticket = await prisma.ticket.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Tickets and only return the `lotNumber`
+     * const ticketWithLotNumberOnly = await prisma.ticket.createManyAndReturn({
+     *   select: { lotNumber: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TicketCreateManyAndReturnArgs>(args?: SelectSubset<T, TicketCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Delete a Ticket.
      * @param {TicketDeleteArgs} args - Arguments to delete one Ticket.
      * @example
@@ -2503,6 +2698,36 @@ export namespace Prisma {
     updateMany<T extends TicketUpdateManyArgs>(args: SelectSubset<T, TicketUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Update zero or more Tickets and returns the data updated in the database.
+     * @param {TicketUpdateManyAndReturnArgs} args - Arguments to update many Tickets.
+     * @example
+     * // Update many Tickets
+     * const ticket = await prisma.ticket.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Tickets and only return the `lotNumber`
+     * const ticketWithLotNumberOnly = await prisma.ticket.updateManyAndReturn({
+     *   select: { lotNumber: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TicketUpdateManyAndReturnArgs>(args: SelectSubset<T, TicketUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Create or update one Ticket.
      * @param {TicketUpsertArgs} args - Arguments to update or create a Ticket.
      * @example
@@ -2520,29 +2745,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends TicketUpsertArgs>(args: SelectSubset<T, TicketUpsertArgs<ExtArgs>>): Prisma__TicketClient<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more Tickets that matches the filter.
-     * @param {TicketFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const ticket = await prisma.ticket.findRaw({
-     *   filter: { age: { $gt: 25 } }
-     * })
-     */
-    findRaw(args?: TicketFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a Ticket.
-     * @param {TicketAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const ticket = await prisma.ticket.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: TicketAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -2718,7 +2920,7 @@ export namespace Prisma {
     readonly lotNumber: FieldRef<"Ticket", 'String'>
     readonly name: FieldRef<"Ticket", 'String'>
     readonly price: FieldRef<"Ticket", 'Int'>
-    readonly userId: FieldRef<"Ticket", 'String'>
+    readonly userId: FieldRef<"Ticket", 'Int'>
   }
     
 
@@ -2948,6 +3150,30 @@ export namespace Prisma {
      * The data used to create many Tickets.
      */
     data: TicketCreateManyInput | TicketCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Ticket createManyAndReturn
+   */
+  export type TicketCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Ticket
+     */
+    select?: TicketSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Ticket
+     */
+    omit?: TicketOmit<ExtArgs> | null
+    /**
+     * The data used to create many Tickets.
+     */
+    data: TicketCreateManyInput | TicketCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TicketIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2992,6 +3218,36 @@ export namespace Prisma {
      * Limit how many Tickets to update.
      */
     limit?: number
+  }
+
+  /**
+   * Ticket updateManyAndReturn
+   */
+  export type TicketUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Ticket
+     */
+    select?: TicketSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Ticket
+     */
+    omit?: TicketOmit<ExtArgs> | null
+    /**
+     * The data used to update Tickets.
+     */
+    data: XOR<TicketUpdateManyMutationInput, TicketUncheckedUpdateManyInput>
+    /**
+     * Filter which Tickets to update
+     */
+    where?: TicketWhereInput
+    /**
+     * Limit how many Tickets to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TicketIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3061,34 +3317,6 @@ export namespace Prisma {
   }
 
   /**
-   * Ticket findRaw
-   */
-  export type TicketFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * Ticket aggregateRaw
-   */
-  export type TicketAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
    * Ticket.scanTickets
    */
   export type Ticket$scanTicketsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3137,12 +3365,22 @@ export namespace Prisma {
 
   export type AggregateScanTicket = {
     _count: ScanTicketCountAggregateOutputType | null
+    _avg: ScanTicketAvgAggregateOutputType | null
+    _sum: ScanTicketSumAggregateOutputType | null
     _min: ScanTicketMinAggregateOutputType | null
     _max: ScanTicketMaxAggregateOutputType | null
   }
 
+  export type ScanTicketAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type ScanTicketSumAggregateOutputType = {
+    id: number | null
+  }
+
   export type ScanTicketMinAggregateOutputType = {
-    id: string | null
+    id: number | null
     ticketNumber: string | null
     sessionType: $Enums.SessionType | null
     scannedAt: Date | null
@@ -3150,7 +3388,7 @@ export namespace Prisma {
   }
 
   export type ScanTicketMaxAggregateOutputType = {
-    id: string | null
+    id: number | null
     ticketNumber: string | null
     sessionType: $Enums.SessionType | null
     scannedAt: Date | null
@@ -3166,6 +3404,14 @@ export namespace Prisma {
     _all: number
   }
 
+
+  export type ScanTicketAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type ScanTicketSumAggregateInputType = {
+    id?: true
+  }
 
   export type ScanTicketMinAggregateInputType = {
     id?: true
@@ -3230,6 +3476,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ScanTicketAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ScanTicketSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ScanTicketMinAggregateInputType
@@ -3260,17 +3518,21 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ScanTicketCountAggregateInputType | true
+    _avg?: ScanTicketAvgAggregateInputType
+    _sum?: ScanTicketSumAggregateInputType
     _min?: ScanTicketMinAggregateInputType
     _max?: ScanTicketMaxAggregateInputType
   }
 
   export type ScanTicketGroupByOutputType = {
-    id: string
+    id: number
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt: Date
     ticketLotNumber: string
     _count: ScanTicketCountAggregateOutputType | null
+    _avg: ScanTicketAvgAggregateOutputType | null
+    _sum: ScanTicketSumAggregateOutputType | null
     _min: ScanTicketMinAggregateOutputType | null
     _max: ScanTicketMaxAggregateOutputType | null
   }
@@ -3298,7 +3560,23 @@ export namespace Prisma {
     ticket?: boolean | TicketDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["scanTicket"]>
 
+  export type ScanTicketSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ticketNumber?: boolean
+    sessionType?: boolean
+    scannedAt?: boolean
+    ticketLotNumber?: boolean
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["scanTicket"]>
 
+  export type ScanTicketSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ticketNumber?: boolean
+    sessionType?: boolean
+    scannedAt?: boolean
+    ticketLotNumber?: boolean
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["scanTicket"]>
 
   export type ScanTicketSelectScalar = {
     id?: boolean
@@ -3312,6 +3590,12 @@ export namespace Prisma {
   export type ScanTicketInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     ticket?: boolean | TicketDefaultArgs<ExtArgs>
   }
+  export type ScanTicketIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }
+  export type ScanTicketIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }
 
   export type $ScanTicketPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ScanTicket"
@@ -3319,7 +3603,7 @@ export namespace Prisma {
       ticket: Prisma.$TicketPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
-      id: string
+      id: number
       ticketNumber: string
       sessionType: $Enums.SessionType
       scannedAt: Date
@@ -3442,6 +3726,30 @@ export namespace Prisma {
     createMany<T extends ScanTicketCreateManyArgs>(args?: SelectSubset<T, ScanTicketCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many ScanTickets and returns the data saved in the database.
+     * @param {ScanTicketCreateManyAndReturnArgs} args - Arguments to create many ScanTickets.
+     * @example
+     * // Create many ScanTickets
+     * const scanTicket = await prisma.scanTicket.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ScanTickets and only return the `id`
+     * const scanTicketWithIdOnly = await prisma.scanTicket.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ScanTicketCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanTicketCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanTicketPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Delete a ScanTicket.
      * @param {ScanTicketDeleteArgs} args - Arguments to delete one ScanTicket.
      * @example
@@ -3506,6 +3814,36 @@ export namespace Prisma {
     updateMany<T extends ScanTicketUpdateManyArgs>(args: SelectSubset<T, ScanTicketUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Update zero or more ScanTickets and returns the data updated in the database.
+     * @param {ScanTicketUpdateManyAndReturnArgs} args - Arguments to update many ScanTickets.
+     * @example
+     * // Update many ScanTickets
+     * const scanTicket = await prisma.scanTicket.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ScanTickets and only return the `id`
+     * const scanTicketWithIdOnly = await prisma.scanTicket.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ScanTicketUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanTicketUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanTicketPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
      * Create or update one ScanTicket.
      * @param {ScanTicketUpsertArgs} args - Arguments to update or create a ScanTicket.
      * @example
@@ -3523,29 +3861,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends ScanTicketUpsertArgs>(args: SelectSubset<T, ScanTicketUpsertArgs<ExtArgs>>): Prisma__ScanTicketClient<$Result.GetResult<Prisma.$ScanTicketPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more ScanTickets that matches the filter.
-     * @param {ScanTicketFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const scanTicket = await prisma.scanTicket.findRaw({
-     *   filter: { age: { $gt: 25 } }
-     * })
-     */
-    findRaw(args?: ScanTicketFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a ScanTicket.
-     * @param {ScanTicketAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const scanTicket = await prisma.scanTicket.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: ScanTicketAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -3717,7 +4032,7 @@ export namespace Prisma {
    * Fields of the ScanTicket model
    */ 
   interface ScanTicketFieldRefs {
-    readonly id: FieldRef<"ScanTicket", 'String'>
+    readonly id: FieldRef<"ScanTicket", 'Int'>
     readonly ticketNumber: FieldRef<"ScanTicket", 'String'>
     readonly sessionType: FieldRef<"ScanTicket", 'SessionType'>
     readonly scannedAt: FieldRef<"ScanTicket", 'DateTime'>
@@ -3951,6 +4266,30 @@ export namespace Prisma {
      * The data used to create many ScanTickets.
      */
     data: ScanTicketCreateManyInput | ScanTicketCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ScanTicket createManyAndReturn
+   */
+  export type ScanTicketCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScanTicket
+     */
+    select?: ScanTicketSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ScanTicket
+     */
+    omit?: ScanTicketOmit<ExtArgs> | null
+    /**
+     * The data used to create many ScanTickets.
+     */
+    data: ScanTicketCreateManyInput | ScanTicketCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScanTicketIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3995,6 +4334,36 @@ export namespace Prisma {
      * Limit how many ScanTickets to update.
      */
     limit?: number
+  }
+
+  /**
+   * ScanTicket updateManyAndReturn
+   */
+  export type ScanTicketUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScanTicket
+     */
+    select?: ScanTicketSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ScanTicket
+     */
+    omit?: ScanTicketOmit<ExtArgs> | null
+    /**
+     * The data used to update ScanTickets.
+     */
+    data: XOR<ScanTicketUpdateManyMutationInput, ScanTicketUncheckedUpdateManyInput>
+    /**
+     * Filter which ScanTickets to update
+     */
+    where?: ScanTicketWhereInput
+    /**
+     * Limit how many ScanTickets to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScanTicketIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4064,34 +4433,6 @@ export namespace Prisma {
   }
 
   /**
-   * ScanTicket findRaw
-   */
-  export type ScanTicketFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * ScanTicket aggregateRaw
-   */
-  export type ScanTicketAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
    * ScanTicket without action
    */
   export type ScanTicketDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4113,6 +4454,16 @@ export namespace Prisma {
   /**
    * Enums
    */
+
+  export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
+    Serializable: 'Serializable'
+  };
+
+  export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
 
   export const UserScalarFieldEnum: {
     id: 'id',
@@ -4169,6 +4520,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'String'
    */
   export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
@@ -4193,20 +4558,6 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -4245,7 +4596,7 @@ export namespace Prisma {
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
-    id?: StringFilter<"User"> | string
+    id?: IntFilter<"User"> | number
     email?: StringFilter<"User"> | string
     firstname?: StringFilter<"User"> | string
     lastname?: StringFilter<"User"> | string
@@ -4265,7 +4616,7 @@ export namespace Prisma {
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
+    id?: number
     email?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
@@ -4285,15 +4636,17 @@ export namespace Prisma {
     password?: SortOrder
     createdAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
     AND?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
     OR?: UserScalarWhereWithAggregatesInput[]
     NOT?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"User"> | string
+    id?: IntWithAggregatesFilter<"User"> | number
     email?: StringWithAggregatesFilter<"User"> | string
     firstname?: StringWithAggregatesFilter<"User"> | string
     lastname?: StringWithAggregatesFilter<"User"> | string
@@ -4308,7 +4661,7 @@ export namespace Prisma {
     lotNumber?: StringFilter<"Ticket"> | string
     name?: StringFilter<"Ticket"> | string
     price?: IntFilter<"Ticket"> | number
-    userId?: StringFilter<"Ticket"> | string
+    userId?: IntFilter<"Ticket"> | number
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     scanTickets?: ScanTicketListRelationFilter
   }
@@ -4329,7 +4682,7 @@ export namespace Prisma {
     NOT?: TicketWhereInput | TicketWhereInput[]
     name?: StringFilter<"Ticket"> | string
     price?: IntFilter<"Ticket"> | number
-    userId?: StringFilter<"Ticket"> | string
+    userId?: IntFilter<"Ticket"> | number
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     scanTickets?: ScanTicketListRelationFilter
   }, "lotNumber">
@@ -4353,14 +4706,14 @@ export namespace Prisma {
     lotNumber?: StringWithAggregatesFilter<"Ticket"> | string
     name?: StringWithAggregatesFilter<"Ticket"> | string
     price?: IntWithAggregatesFilter<"Ticket"> | number
-    userId?: StringWithAggregatesFilter<"Ticket"> | string
+    userId?: IntWithAggregatesFilter<"Ticket"> | number
   }
 
   export type ScanTicketWhereInput = {
     AND?: ScanTicketWhereInput | ScanTicketWhereInput[]
     OR?: ScanTicketWhereInput[]
     NOT?: ScanTicketWhereInput | ScanTicketWhereInput[]
-    id?: StringFilter<"ScanTicket"> | string
+    id?: IntFilter<"ScanTicket"> | number
     ticketNumber?: StringFilter<"ScanTicket"> | string
     sessionType?: EnumSessionTypeFilter<"ScanTicket"> | $Enums.SessionType
     scannedAt?: DateTimeFilter<"ScanTicket"> | Date | string
@@ -4378,7 +4731,7 @@ export namespace Prisma {
   }
 
   export type ScanTicketWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
+    id?: number
     AND?: ScanTicketWhereInput | ScanTicketWhereInput[]
     OR?: ScanTicketWhereInput[]
     NOT?: ScanTicketWhereInput | ScanTicketWhereInput[]
@@ -4396,15 +4749,17 @@ export namespace Prisma {
     scannedAt?: SortOrder
     ticketLotNumber?: SortOrder
     _count?: ScanTicketCountOrderByAggregateInput
+    _avg?: ScanTicketAvgOrderByAggregateInput
     _max?: ScanTicketMaxOrderByAggregateInput
     _min?: ScanTicketMinOrderByAggregateInput
+    _sum?: ScanTicketSumOrderByAggregateInput
   }
 
   export type ScanTicketScalarWhereWithAggregatesInput = {
     AND?: ScanTicketScalarWhereWithAggregatesInput | ScanTicketScalarWhereWithAggregatesInput[]
     OR?: ScanTicketScalarWhereWithAggregatesInput[]
     NOT?: ScanTicketScalarWhereWithAggregatesInput | ScanTicketScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanTicket"> | string
+    id?: IntWithAggregatesFilter<"ScanTicket"> | number
     ticketNumber?: StringWithAggregatesFilter<"ScanTicket"> | string
     sessionType?: EnumSessionTypeWithAggregatesFilter<"ScanTicket"> | $Enums.SessionType
     scannedAt?: DateTimeWithAggregatesFilter<"ScanTicket"> | Date | string
@@ -4412,7 +4767,6 @@ export namespace Prisma {
   }
 
   export type UserCreateInput = {
-    id?: string
     email: string
     firstname: string
     lastname: string
@@ -4422,7 +4776,7 @@ export namespace Prisma {
   }
 
   export type UserUncheckedCreateInput = {
-    id?: string
+    id?: number
     email: string
     firstname: string
     lastname: string
@@ -4441,6 +4795,7 @@ export namespace Prisma {
   }
 
   export type UserUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
     email?: StringFieldUpdateOperationsInput | string
     firstname?: StringFieldUpdateOperationsInput | string
     lastname?: StringFieldUpdateOperationsInput | string
@@ -4450,7 +4805,7 @@ export namespace Prisma {
   }
 
   export type UserCreateManyInput = {
-    id?: string
+    id?: number
     email: string
     firstname: string
     lastname: string
@@ -4467,6 +4822,7 @@ export namespace Prisma {
   }
 
   export type UserUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
     email?: StringFieldUpdateOperationsInput | string
     firstname?: StringFieldUpdateOperationsInput | string
     lastname?: StringFieldUpdateOperationsInput | string
@@ -4486,11 +4842,12 @@ export namespace Prisma {
     lotNumber: string
     name: string
     price: number
-    userId: string
+    userId: number
     scanTickets?: ScanTicketUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUpdateInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
     user?: UserUpdateOneRequiredWithoutTicketsNestedInput
@@ -4498,9 +4855,10 @@ export namespace Prisma {
   }
 
   export type TicketUncheckedUpdateInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
     scanTickets?: ScanTicketUncheckedUpdateManyWithoutTicketNestedInput
   }
 
@@ -4508,22 +4866,23 @@ export namespace Prisma {
     lotNumber: string
     name: string
     price: number
-    userId: string
+    userId: number
   }
 
   export type TicketUpdateManyMutationInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
   }
 
   export type TicketUncheckedUpdateManyInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
   }
 
   export type ScanTicketCreateInput = {
-    id?: string
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
@@ -4531,7 +4890,7 @@ export namespace Prisma {
   }
 
   export type ScanTicketUncheckedCreateInput = {
-    id?: string
+    id?: number
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
@@ -4546,6 +4905,7 @@ export namespace Prisma {
   }
 
   export type ScanTicketUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
     ticketNumber?: StringFieldUpdateOperationsInput | string
     sessionType?: EnumSessionTypeFieldUpdateOperationsInput | $Enums.SessionType
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -4553,7 +4913,7 @@ export namespace Prisma {
   }
 
   export type ScanTicketCreateManyInput = {
-    id?: string
+    id?: number
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
@@ -4567,10 +4927,22 @@ export namespace Prisma {
   }
 
   export type ScanTicketUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
     ticketNumber?: StringFieldUpdateOperationsInput | string
     sessionType?: EnumSessionTypeFieldUpdateOperationsInput | $Enums.SessionType
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ticketLotNumber?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -4618,6 +4990,10 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type UserAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
   export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
@@ -4634,6 +5010,26 @@ export namespace Prisma {
     lastname?: SortOrder
     password?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -4668,17 +5064,6 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -4703,6 +5088,7 @@ export namespace Prisma {
 
   export type TicketAvgOrderByAggregateInput = {
     price?: SortOrder
+    userId?: SortOrder
   }
 
   export type TicketMaxOrderByAggregateInput = {
@@ -4721,22 +5107,7 @@ export namespace Prisma {
 
   export type TicketSumOrderByAggregateInput = {
     price?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
+    userId?: SortOrder
   }
 
   export type EnumSessionTypeFilter<$PrismaModel = never> = {
@@ -4759,6 +5130,10 @@ export namespace Prisma {
     ticketLotNumber?: SortOrder
   }
 
+  export type ScanTicketAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
   export type ScanTicketMaxOrderByAggregateInput = {
     id?: SortOrder
     ticketNumber?: SortOrder
@@ -4773,6 +5148,10 @@ export namespace Prisma {
     sessionType?: SortOrder
     scannedAt?: SortOrder
     ticketLotNumber?: SortOrder
+  }
+
+  export type ScanTicketSumOrderByAggregateInput = {
+    id?: SortOrder
   }
 
   export type EnumSessionTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -4821,6 +5200,14 @@ export namespace Prisma {
     deleteMany?: TicketScalarWhereInput | TicketScalarWhereInput[]
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type TicketUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<TicketCreateWithoutUserInput, TicketUncheckedCreateWithoutUserInput> | TicketCreateWithoutUserInput[] | TicketUncheckedCreateWithoutUserInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutUserInput | TicketCreateOrConnectWithoutUserInput[]
@@ -4853,14 +5240,6 @@ export namespace Prisma {
     connectOrCreate?: ScanTicketCreateOrConnectWithoutTicketInput | ScanTicketCreateOrConnectWithoutTicketInput[]
     createMany?: ScanTicketCreateManyTicketInputEnvelope
     connect?: ScanTicketWhereUniqueInput | ScanTicketWhereUniqueInput[]
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type UserUpdateOneRequiredWithoutTicketsNestedInput = {
@@ -4917,6 +5296,17 @@ export namespace Prisma {
     update?: XOR<XOR<TicketUpdateToOneWithWhereWithoutScanTicketsInput, TicketUpdateWithoutScanTicketsInput>, TicketUncheckedUpdateWithoutScanTicketsInput>
   }
 
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -4940,48 +5330,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
-  export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -5009,6 +5357,37 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedEnumSessionTypeFilter<$PrismaModel = never> = {
@@ -5049,6 +5428,7 @@ export namespace Prisma {
 
   export type TicketCreateManyUserInputEnvelope = {
     data: TicketCreateManyUserInput | TicketCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type TicketUpsertWithWhereUniqueWithoutUserInput = {
@@ -5074,11 +5454,10 @@ export namespace Prisma {
     lotNumber?: StringFilter<"Ticket"> | string
     name?: StringFilter<"Ticket"> | string
     price?: IntFilter<"Ticket"> | number
-    userId?: StringFilter<"Ticket"> | string
+    userId?: IntFilter<"Ticket"> | number
   }
 
   export type UserCreateWithoutTicketsInput = {
-    id?: string
     email: string
     firstname: string
     lastname: string
@@ -5087,7 +5466,7 @@ export namespace Prisma {
   }
 
   export type UserUncheckedCreateWithoutTicketsInput = {
-    id?: string
+    id?: number
     email: string
     firstname: string
     lastname: string
@@ -5101,14 +5480,13 @@ export namespace Prisma {
   }
 
   export type ScanTicketCreateWithoutTicketInput = {
-    id?: string
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
   }
 
   export type ScanTicketUncheckedCreateWithoutTicketInput = {
-    id?: string
+    id?: number
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
@@ -5121,6 +5499,7 @@ export namespace Prisma {
 
   export type ScanTicketCreateManyTicketInputEnvelope = {
     data: ScanTicketCreateManyTicketInput | ScanTicketCreateManyTicketInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserUpsertWithoutTicketsInput = {
@@ -5143,6 +5522,7 @@ export namespace Prisma {
   }
 
   export type UserUncheckedUpdateWithoutTicketsInput = {
+    id?: IntFieldUpdateOperationsInput | number
     email?: StringFieldUpdateOperationsInput | string
     firstname?: StringFieldUpdateOperationsInput | string
     lastname?: StringFieldUpdateOperationsInput | string
@@ -5170,7 +5550,7 @@ export namespace Prisma {
     AND?: ScanTicketScalarWhereInput | ScanTicketScalarWhereInput[]
     OR?: ScanTicketScalarWhereInput[]
     NOT?: ScanTicketScalarWhereInput | ScanTicketScalarWhereInput[]
-    id?: StringFilter<"ScanTicket"> | string
+    id?: IntFilter<"ScanTicket"> | number
     ticketNumber?: StringFilter<"ScanTicket"> | string
     sessionType?: EnumSessionTypeFilter<"ScanTicket"> | $Enums.SessionType
     scannedAt?: DateTimeFilter<"ScanTicket"> | Date | string
@@ -5188,7 +5568,7 @@ export namespace Prisma {
     lotNumber: string
     name: string
     price: number
-    userId: string
+    userId: number
   }
 
   export type TicketCreateOrConnectWithoutScanTicketsInput = {
@@ -5208,15 +5588,17 @@ export namespace Prisma {
   }
 
   export type TicketUpdateWithoutScanTicketsInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
     user?: UserUpdateOneRequiredWithoutTicketsNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutScanTicketsInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
   }
 
   export type TicketCreateManyUserInput = {
@@ -5226,24 +5608,27 @@ export namespace Prisma {
   }
 
   export type TicketUpdateWithoutUserInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
     scanTickets?: ScanTicketUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutUserInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
     scanTickets?: ScanTicketUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutUserInput = {
+    lotNumber?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     price?: IntFieldUpdateOperationsInput | number
   }
 
   export type ScanTicketCreateManyTicketInput = {
-    id?: string
+    id?: number
     ticketNumber: string
     sessionType: $Enums.SessionType
     scannedAt?: Date | string
@@ -5256,12 +5641,14 @@ export namespace Prisma {
   }
 
   export type ScanTicketUncheckedUpdateWithoutTicketInput = {
+    id?: IntFieldUpdateOperationsInput | number
     ticketNumber?: StringFieldUpdateOperationsInput | string
     sessionType?: EnumSessionTypeFieldUpdateOperationsInput | $Enums.SessionType
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ScanTicketUncheckedUpdateManyWithoutTicketInput = {
+    id?: IntFieldUpdateOperationsInput | number
     ticketNumber?: StringFieldUpdateOperationsInput | string
     sessionType?: EnumSessionTypeFieldUpdateOperationsInput | $Enums.SessionType
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -6,38 +6,37 @@
 
 generator client {
   provider = "prisma-client-js"
-  output = "../generated/prisma"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 
-model User{
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  email String @unique
+model User {
+  id        Int      @id @default(autoincrement()) 
+  email     String   @unique
   firstname String
-  lastname String 
-  password String
+  lastname  String
+  password  String
   createdAt DateTime @default(now())
 
-  tickets Ticket[]
+  tickets Ticket[] 
 }
 
 model Ticket{
-  lotNumber String @id @map("_id")
+  lotNumber String @id
   name String
   price Int
-  userId String @db.ObjectId
+  userId Int
   user User @relation(fields: [userId],references: [id])
 
   scanTickets ScanTicket[]
 }
 
 model ScanTicket{
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+  id Int @id @default(autoincrement())
   ticketNumber String
   sessionType SessionType 
   scannedAt DateTime @default(now())

@@ -15,7 +15,7 @@ datasource db {
 
 
 model User {
-  id        Int      @id @default(autoincrement()) 
+  id        String   @id @default(uuid()) 
   email     String   @unique
   firstname String
   lastname  String
@@ -29,14 +29,14 @@ model Ticket{
   lotNumber String @id
   name String
   price Int
-  userId Int
+  userId String
   user User @relation(fields: [userId],references: [id])
 
   scanTickets ScanTicket[]
 }
 
 model ScanTicket{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   ticketNumber String
   sessionType SessionType 
   scannedAt DateTime @default(now())

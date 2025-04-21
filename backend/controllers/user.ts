@@ -202,6 +202,7 @@ const getUserInfo : RequestHandler = async(req:Request,res:Response) => {
 
     res.json({
         id: user?.id,
+        email: user?.email,
         firstname: user?.firstname,
         lastname: user?.lastname,
         createdAt: user?.createdAt
@@ -225,9 +226,12 @@ const deleteUser :RequestHandler = async(req:Request,res:Response) => {
         message: "User delted"
     })
 }
+
 userRouter.post("/signup",signupHandler);
 userRouter.post("/signin",signinHandler);
 userRouter.put("/update",authMiddleware,updateUserInfoById);
 userRouter.post("/delete",authMiddleware,deleteUser);
+userRouter.get("/getUserById",authMiddleware,getUserInfo);
+userRouter.get("/getAllUsers",authMiddleware,getAllUsers);
 
 export default userRouter;

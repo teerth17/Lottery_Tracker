@@ -156,6 +156,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     res.json({
         id: user === null || user === void 0 ? void 0 : user.id,
+        email: user === null || user === void 0 ? void 0 : user.email,
         firstname: user === null || user === void 0 ? void 0 : user.firstname,
         lastname: user === null || user === void 0 ? void 0 : user.lastname,
         createdAt: user === null || user === void 0 ? void 0 : user.createdAt
@@ -177,4 +178,6 @@ userRouter.post("/signup", signupHandler);
 userRouter.post("/signin", signinHandler);
 userRouter.put("/update", authMiddleware_1.default, updateUserInfoById);
 userRouter.post("/delete", authMiddleware_1.default, deleteUser);
+userRouter.get("/getUserById", authMiddleware_1.default, getUserInfo);
+userRouter.get("/getAllUsers", authMiddleware_1.default, getAllUsers);
 exports.default = userRouter;

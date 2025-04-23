@@ -19,13 +19,15 @@ type NewTicketRequestBody = {
     lotNumber: string,
     name: string,
     price: number,
-    userId: string
+    userId: string,
+    lotHint:string
 }
 
 const newTicketSchema = z.object({
     lotNumber: z.string(),
     name: z.string(),
     price: z.number(),
+    lotHint: z.string(),
 })
 
 const updateTicketSchema = z.object({
@@ -51,7 +53,12 @@ const addNewTicket: RequestHandler = async (req: Request, res: Response) => {
     }
 
     const existingTicket = await prisma.ticket.findUnique({
-        where: {lotNumber: body.lotNumber, userId} 
+        where: {
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          } 
     })
 
     if(existingTicket){
@@ -68,6 +75,7 @@ const addNewTicket: RequestHandler = async (req: Request, res: Response) => {
             name: body.name,
             price: body.price,
             userId: userId,
+            lotHint: body.lotHint
         }
     })
     console.log("after inserting ticket log..")
@@ -79,7 +87,11 @@ const addNewTicket: RequestHandler = async (req: Request, res: Response) => {
 
 // get all tickets
 const getAllTicketsByUserId: RequestHandler = async(req:Request,res:Response) => {
-    const userId = req.userId;
+    const userId = req.userId as string;
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
 
     console.log("before getting all tickets..")
 
@@ -109,10 +121,18 @@ const getTicketByLotNumber: RequestHandler = async(req:Request,res:Response) => 
     const body = req.body;
     console.log("body: ",body);
 
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
+
     const ticket = await prisma.ticket.findUnique({
         where: {
-            lotNumber: body.lotNumber
-        }
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          } 
     })
 
     if(!ticket){
@@ -129,11 +149,58 @@ const getTicketByLotNumber: RequestHandler = async(req:Request,res:Response) => 
     })
 }
 
+//get ticket by lotHint
+const getTicketByLotHint: RequestHandler = async (req:Request,res:Response) => {
+    console.log("enterd...")
+    const userId = req.userId;
+    const {lotHint} = req.query;
+    console.log("lotHint: ",lotHint)
+
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
+    if(!lotHint) {
+        res.status(400).json({message: "LotHint is missing"})
+        return;
+    }
+
+    const ticket = await prisma.ticket.findFirst({
+        where: {
+            lotHint: lotHint as string,
+            userId: userId
+        }
+    });
+
+    console.log("ticket: ", ticket)
+
+    if (!ticket) {
+        res.status(404).json({
+            lotHint: lotHint,
+            message: "No ticket found with the provided hint."});
+        return;
+    }
+
+    res.status(200).json({
+        lotNumber: ticket.lotNumber,
+        name: ticket.name,
+        price: ticket.price,
+        lotHint: ticket.lotHint,
+        message: "Fetched the ticket successfully."
+    });
+
+}
+
 // update a ticket
 const updateTicket: RequestHandler = async(req:Request,res:Response) => {
     const userId = req.userId;
     const body = req.body;
     console.log("body:",req.body);
+
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
     const {success} = updateTicketSchema.safeParse(body);
 
     if(!success){
@@ -143,7 +210,12 @@ const updateTicket: RequestHandler = async(req:Request,res:Response) => {
     }
 
     const existingTicket = await prisma.ticket.findUnique({
-        where: {lotNumber: body.lotNumber, userId} 
+        where: {
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          } 
     })
 
     if(!existingTicket){
@@ -156,9 +228,11 @@ const updateTicket: RequestHandler = async(req:Request,res:Response) => {
     console.log("before updating ticket info..")
     await prisma.ticket.update({
         where: {
-            lotNumber:body.lotNumber,
-            userId
-        },
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          },
         data: {
             ...(body.name && { name: body.name }),
             ...(body.price && { price: body.price }),
@@ -171,13 +245,25 @@ const updateTicket: RequestHandler = async(req:Request,res:Response) => {
 
 }
 
+
+
 //delete ticket by number
 const deleteTicket :RequestHandler = async (req:Request,res:Response) => {
     const userId = req.userId;
     const body = req.body;
 
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
+
     const existingTicket = await prisma.ticket.findUnique({
-        where: {lotNumber: body.lotNumber, userId} 
+        where: {
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          } 
     })
 
     if(!existingTicket){
@@ -190,7 +276,12 @@ const deleteTicket :RequestHandler = async (req:Request,res:Response) => {
     console.log("before deleting..")
 
     await prisma.ticket.delete({
-        where: {lotNumber:body.lotNumber, userId}
+        where: {
+            userId_lotNumber: {
+              userId,
+              lotNumber: body.lotNumber
+            }
+          }
     })
 
     console.log("delted")
@@ -202,6 +293,7 @@ const deleteTicket :RequestHandler = async (req:Request,res:Response) => {
 
 newTicketRouter.get("/getAllTickets",authMiddleware,getAllTicketsByUserId);
 newTicketRouter.get("/getTicket",authMiddleware,getTicketByLotNumber);
+newTicketRouter.get("/getTicketByLotHint",authMiddleware,getTicketByLotHint);
 newTicketRouter.post("/addNewTicket", authMiddleware, addNewTicket);
 newTicketRouter.put("/updateTicket",authMiddleware,updateTicket);
 newTicketRouter.post("/deleteTicket",authMiddleware, deleteTicket);

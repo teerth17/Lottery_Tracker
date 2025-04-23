@@ -26,13 +26,16 @@ model User {
 }
 
 model Ticket{
-  lotNumber String @id
+  lotNumber String
   name String
   price Int
   userId String
+  lotHint String
   user User @relation(fields: [userId],references: [id])
 
   scanTickets ScanTicket[]
+
+  @@id([userId,lotNumber])
 }
 
 model ScanTicket{
@@ -41,7 +44,9 @@ model ScanTicket{
   sessionType SessionType 
   scannedAt DateTime @default(now())
   ticketLotNumber String
-  ticket Ticket @relation(fields: [ticketLotNumber],references: [lotNumber])
+  userId String
+  
+  ticket Ticket @relation(fields: [userId,ticketLotNumber],references: [userId,lotNumber])
 
 }
 

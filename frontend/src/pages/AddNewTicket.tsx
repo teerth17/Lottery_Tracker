@@ -7,7 +7,7 @@ import BarcodeScanner from "react-qr-barcode-scanner";
 
 export const AddNewTicket = () => {
     const token = localStorage.getItem('token') || "";
-    const [lotNumber,setLotNumber] = useState('');
+    const [lotNumber,setLotNumber] = useState("");
     const [name,setName] = useState("");
     const [price, setPrice] = useState<number>(0);
     const [loading, setLoading] = useState(false);
@@ -38,7 +38,15 @@ export const AddNewTicket = () => {
           setMessage("Please fill all fields and ensure you're logged in.");
           return;
         }
-    
+        if(lotNumber.length != 12 ){
+          setMessage("lottery number should be 12 digit, try again!")
+          return;
+        }
+
+        console.log("this is lotNumber: " , lotNumber)
+        const lotHint = lotNumber.slice(-5,-1)
+        console.log("got this lotHint: ",lotHint);
+
         setLoading(true);
         try {
           const response = await axios.post(
@@ -48,6 +56,7 @@ export const AddNewTicket = () => {
               name,
               price,
               userId,
+              lotHint
             },
             {
               headers: {

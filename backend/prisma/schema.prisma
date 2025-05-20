@@ -47,6 +47,9 @@ model ScanTicket{
   userId String
   
   ticket Ticket @relation(fields: [userId,ticketLotNumber],references: [userId,lotNumber])
+  
+  @@index([userId,scannedAt])
+  @@index([userId,sessionType,scannedAt])
 
 }
 

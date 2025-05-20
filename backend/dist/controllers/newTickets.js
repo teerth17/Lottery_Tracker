@@ -25,6 +25,7 @@ const newTicketSchema = zod_1.default.object({
     lotNumber: zod_1.default.string(),
     name: zod_1.default.string(),
     price: zod_1.default.number(),
+    lotHint: zod_1.default.string(),
 });
 const updateTicketSchema = zod_1.default.object({
     lotNumber: zod_1.default.string(),
@@ -44,7 +45,12 @@ const addNewTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
     }
     const existingTicket = yield prisma.ticket.findUnique({
-        where: { lotNumber: body.lotNumber, userId }
+        where: {
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
+        }
     });
     if (existingTicket) {
         res.status(400).json({
@@ -59,6 +65,7 @@ const addNewTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             name: body.name,
             price: body.price,
             userId: userId,
+            lotHint: body.lotHint
         }
     });
     console.log("after inserting ticket log..");
@@ -70,6 +77,10 @@ const addNewTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 // get all tickets
 const getAllTicketsByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
     console.log("before getting all tickets..");
     const tickets = yield prisma.ticket.findMany({
         where: { userId }
@@ -92,9 +103,16 @@ const getTicketByLotNumber = (req, res) => __awaiter(void 0, void 0, void 0, fun
     const userId = req.userId;
     const body = req.body;
     console.log("body: ", body);
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
     const ticket = yield prisma.ticket.findUnique({
         where: {
-            lotNumber: body.lotNumber
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
         }
     });
     if (!ticket) {
@@ -109,11 +127,51 @@ const getTicketByLotNumber = (req, res) => __awaiter(void 0, void 0, void 0, fun
         message: "fetched the ticket successfully"
     });
 });
+//get ticket by lotHint
+const getTicketByLotHint = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("enterd...");
+    const userId = req.userId;
+    const { lotHint } = req.query;
+    console.log("lotHint: ", lotHint);
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
+    if (!lotHint) {
+        res.status(400).json({ message: "LotHint is missing" });
+        return;
+    }
+    const ticket = yield prisma.ticket.findFirst({
+        where: {
+            lotHint: lotHint,
+            userId: userId
+        }
+    });
+    console.log("ticket: ", ticket);
+    if (!ticket) {
+        res.status(404).json({
+            lotHint: lotHint,
+            message: "No ticket found with the provided hint."
+        });
+        return;
+    }
+    res.status(200).json({
+        lotNumber: ticket.lotNumber,
+        name: ticket.name,
+        price: ticket.price,
+        lotHint: ticket.lotHint,
+        message: "Fetched the ticket successfully."
+    });
+});
 // update a ticket
 const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
     const body = req.body;
     console.log("body:", req.body);
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
     const { success } = updateTicketSchema.safeParse(body);
     if (!success) {
         res.json({
@@ -121,7 +179,12 @@ const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
     }
     const existingTicket = yield prisma.ticket.findUnique({
-        where: { lotNumber: body.lotNumber, userId }
+        where: {
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
+        }
     });
     if (!existingTicket) {
         res.status(400).json({
@@ -132,8 +195,10 @@ const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     console.log("before updating ticket info..");
     yield prisma.ticket.update({
         where: {
-            lotNumber: body.lotNumber,
-            userId
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
         },
         data: Object.assign(Object.assign({}, (body.name && { name: body.name })), (body.price && { price: body.price }))
     });
@@ -145,8 +210,17 @@ const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
     const body = req.body;
+    if (!userId) {
+        res.status(400).json({ message: "User ID is missing or invalid." });
+        return;
+    }
     const existingTicket = yield prisma.ticket.findUnique({
-        where: { lotNumber: body.lotNumber, userId }
+        where: {
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
+        }
     });
     if (!existingTicket) {
         res.status(400).json({
@@ -156,7 +230,12 @@ const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     console.log("before deleting..");
     yield prisma.ticket.delete({
-        where: { lotNumber: body.lotNumber, userId }
+        where: {
+            userId_lotNumber: {
+                userId,
+                lotNumber: body.lotNumber
+            }
+        }
     });
     console.log("delted");
     res.status(200).json({
@@ -165,6 +244,7 @@ const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 newTicketRouter.get("/getAllTickets", authMiddleware_1.default, getAllTicketsByUserId);
 newTicketRouter.get("/getTicket", authMiddleware_1.default, getTicketByLotNumber);
+newTicketRouter.get("/getTicketByLotHint", authMiddleware_1.default, getTicketByLotHint);
 newTicketRouter.post("/addNewTicket", authMiddleware_1.default, addNewTicket);
 newTicketRouter.put("/updateTicket", authMiddleware_1.default, updateTicket);
 newTicketRouter.post("/deleteTicket", authMiddleware_1.default, deleteTicket);

@@ -6,6 +6,8 @@ type Ticket = {
     lotNumber: string;
     name: string;
     price: number;
+    batchSize: number,
+    uniqueCount: number
   };
 
 export const NewTicket = () => {
@@ -14,8 +16,10 @@ export const NewTicket = () => {
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [editingLotNumber,setEditingLotNumber] = useState<String | null>(null);
     const [editName,setEditName] = useState("");
-    const[editPrice,setEditPrice] = useState<number>(0);
+    const [editPrice,setEditPrice] = useState<number>(0);
+    const [uniqueCount,setUniqueCount] = useState(0);
     const [searchParams]  = useSearchParams();
+       const [message, setMessage] = useState("");
     const userId = searchParams.get('id') || "";
     console.log("got user id: ", userId);
 
@@ -30,18 +34,19 @@ export const NewTicket = () => {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            setTickets(response.data.ticket)
+            setTickets(response.data.tickets)
             console.log("Response from get ticket:", response.data);
           } catch (error: any) {
             console.error("Error getting all tickets:", error);
           }        
     }
 
-    const deleteTicket = async (lotNumber:string) => {
+    const deleteTicket = async (lotNumber:string,uniqueCount:number) => {
         try{
             const response = await axios.post("http://localhost:3000/api/v1/user/newTicket/deleteTicket",
                 {
-                    lotNumber
+                    lotNumber,
+                    uniqueCount
                 },
                 {
                     headers: {
@@ -61,6 +66,9 @@ export const NewTicket = () => {
         setEditingLotNumber(ticket.lotNumber);
         setEditName(ticket.name);
         setEditPrice(ticket.price);
+        setUniqueCount(ticket.uniqueCount);
+        console.log("ticket vount: " + ticket.uniqueCount);
+         console.log("ticket vount: " + uniqueCount);
     }
 
     const updateTicket = async () => {
@@ -71,6 +79,7 @@ export const NewTicket = () => {
                     lotNumber: editingLotNumber,
                     name: editName,
                     price:editPrice,
+                    uniqueCount:uniqueCount
                 },
                 {
                     headers: {
@@ -116,13 +125,15 @@ export const NewTicket = () => {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tickets.map((ticket) => (
             <div
-              key={ticket.lotNumber}
+              key={`${ticket.lotNumber}-${ticket.uniqueCount}`}
               className="bg-white rounded-lg shadow p-4 flex flex-col justify-between"
             >
              <div>
   <p className="text-sm text-gray-600 font-medium">Lot #: {ticket.lotNumber}</p>
-
-  {editingLotNumber === ticket.lotNumber ? (
+            console.log("var ticket count:" + {uniqueCount} )
+             console.log("var ticket count:" + {ticket.uniqueCount} )
+            
+  {editingLotNumber === ticket.lotNumber && uniqueCount === ticket.uniqueCount ? (
     <div className="mt-2 space-y-2">
       <input
         type="text"
@@ -143,13 +154,14 @@ export const NewTicket = () => {
     <>
       <p className="text-lg font-semibold">{ticket.name}</p>
       <p className="text-sm text-gray-600">Price: ${ticket.price.toFixed(2)}</p>
+      <p className="text-sm text-gray-600">Unique: {ticket.uniqueCount}</p>
     </>
   )}
 </div>
 
 
 <div className="mt-4 flex justify-between">
-  {editingLotNumber === ticket.lotNumber ? (
+  {editingLotNumber === ticket.lotNumber? (
     <>
       <button
         onClick={updateTicket}
@@ -172,12 +184,28 @@ export const NewTicket = () => {
       >
         ✏️ Update
       </button>
-      <button
-        onClick={() => deleteTicket(ticket.lotNumber)}
+      {tickets.some(t => t.lotNumber === ticket.lotNumber && t.uniqueCount === ticket.uniqueCount+1)?
+          (
+            <button
+        onClick={() => {
+          setMessage("To Delete this ticket, U need to delete all tickets with higher unique count.")
+          setTimeout(() => setMessage(""),3000)
+        }}
         className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
       >
         🗑️ Delete
       </button>
+          ): (
+            <button
+
+        onClick={() => deleteTicket(ticket.lotNumber,ticket.uniqueCount)}
+        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+      >
+        🗑️ Delete
+      </button>
+          )
+    }
+      
     </>
   )}
 </div>
@@ -186,6 +214,12 @@ export const NewTicket = () => {
           ))}
         </div>
       )}
+{message && (
+  <p className={`mt-4 text-center text-sm ${message.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+    {message}
+  </p>
+)}
+      
     </div>
     )
 }

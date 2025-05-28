@@ -20,7 +20,8 @@ type NewTicketRequestBody = {
     name: string,
     price: number,
     userId: string,
-    lotHint:string
+    lotHint:string,
+    batchSize:number,
 }
 
 const newTicketSchema = z.object({
@@ -52,21 +53,27 @@ const addNewTicket: RequestHandler = async (req: Request, res: Response) => {
         })
     }
 
-    const existingTicket = await prisma.ticket.findUnique({
-        where: {
-            userId_lotNumber: {
-              userId,
-              lotNumber: body.lotNumber
-            }
-          } 
-    })
+    const last = await prisma.ticket.findFirst({
+  where: { userId, lotNumber:body.lotNumber },
+  orderBy: { uniqueCount: 'desc' },
+});
+const newCount = last ? last.uniqueCount + 1 : 0;
 
-    if(existingTicket){
-        res.status(400).json({
-            message: `Ticket is already added for userId: ${body.userId}`, 
-        })
-        return
-    }
+    // const existingTicket = await prisma.ticket.findUnique({
+    //     where: {
+    //         userId_lotNumber: {
+    //           userId,
+    //           lotNumber: body.lotNumber
+    //         }
+    //       } 
+    // })
+
+    // if(existingTicket){
+    //     res.status(400).json({
+    //         message: `Ticket is already added for userId: ${body.userId}`, 
+    //     })
+    //     return
+    // }
 
     console.log("no existing ticketm,entering to ticket db..")
     await prisma.ticket.create({
@@ -75,7 +82,9 @@ const addNewTicket: RequestHandler = async (req: Request, res: Response) => {
             name: body.name,
             price: body.price,
             userId: userId,
-            lotHint: body.lotHint
+            lotHint: body.lotHint,
+            batchSize: body.batchSize,
+            uniqueCount: newCount
         }
     })
     console.log("after inserting ticket log..")
@@ -106,10 +115,12 @@ const getAllTicketsByUserId: RequestHandler = async(req:Request,res:Response) =>
     }
 
     res.json({
-       ticket: tickets.map(ticket => ({
+       tickets: tickets.map(ticket => ({
         lotNumber: ticket.lotNumber,
         name:ticket.name,
         price:ticket.price,
+        batchSize: ticket.batchSize,
+        uniqueCount: ticket.uniqueCount
        })) 
     })
 
@@ -126,27 +137,28 @@ const getTicketByLotNumber: RequestHandler = async(req:Request,res:Response) => 
         return;
     }
 
-    const ticket = await prisma.ticket.findUnique({
+    const tickets = await prisma.ticket.findMany({
         where: {
-            userId_lotNumber: {
-              userId,
-              lotNumber: body.lotNumber
-            }
+            lotNumber: body.lotNumber
           } 
     })
 
-    if(!ticket){
+    if(!tickets){
         res.json({
             message: "No tickets found.."
         })
     }
 
-    res.status(201).json({
-        lotNumber: ticket?.lotNumber,
+res.status(201).json({
+    tickets: tickets.map((ticket) => ({
+        lotNumber: ticket.lotNumber,
         name: ticket?.name,
         price: ticket?.price,
-        message: "fetched the ticket successfully"
-    })
+        batchSize: ticket.batchSize,
+        uniqueCount: ticket.uniqueCount
+    })),
+    message: "fetched the ticket successfully"
+})
 }
 
 //get ticket by lotHint
@@ -165,16 +177,16 @@ const getTicketByLotHint: RequestHandler = async (req:Request,res:Response) => {
         return;
     }
 
-    const ticket = await prisma.ticket.findFirst({
+    const tickets = await prisma.ticket.findMany({
         where: {
             lotHint: lotHint as string,
             userId: userId
         }
     });
 
-    console.log("ticket: ", ticket)
+    console.log("ticket: ", tickets)
 
-    if (!ticket) {
+    if (!tickets) {
         res.status(404).json({
             lotHint: lotHint,
             message: "No ticket found with the provided hint."});
@@ -182,10 +194,13 @@ const getTicketByLotHint: RequestHandler = async (req:Request,res:Response) => {
     }
 
     res.status(200).json({
+        tickets: tickets.map((ticket) => ({
         lotNumber: ticket.lotNumber,
-        name: ticket.name,
-        price: ticket.price,
-        lotHint: ticket.lotHint,
+        name: ticket?.name,
+        price: ticket?.price,
+        batchSize: ticket.batchSize,
+        uniqueCount: ticket.uniqueCount
+    })),
         message: "Fetched the ticket successfully."
     });
 
@@ -211,9 +226,10 @@ const updateTicket: RequestHandler = async(req:Request,res:Response) => {
 
     const existingTicket = await prisma.ticket.findUnique({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
               userId,
-              lotNumber: body.lotNumber
+              lotNumber: body.lotNumber,
+              uniqueCount: body.uniqueCount
             }
           } 
     })
@@ -228,9 +244,10 @@ const updateTicket: RequestHandler = async(req:Request,res:Response) => {
     console.log("before updating ticket info..")
     await prisma.ticket.update({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
               userId,
-              lotNumber: body.lotNumber
+              lotNumber: body.lotNumber,
+              uniqueCount: body.uniqueCount
             }
           },
         data: {
@@ -259,9 +276,10 @@ const deleteTicket :RequestHandler = async (req:Request,res:Response) => {
 
     const existingTicket = await prisma.ticket.findUnique({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
               userId,
-              lotNumber: body.lotNumber
+              lotNumber: body.lotNumber,
+              uniqueCount: body.uniqueCount
             }
           } 
     })
@@ -277,9 +295,10 @@ const deleteTicket :RequestHandler = async (req:Request,res:Response) => {
 
     await prisma.ticket.delete({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
               userId,
-              lotNumber: body.lotNumber
+              lotNumber: body.lotNumber,
+              uniqueCount:body.uniqueCount
             }
           }
     })

@@ -9,6 +9,7 @@ export const AddNewTicket = () => {
     const token = localStorage.getItem('token') || "";
     const [lotNumber,setLotNumber] = useState("");
     const [name,setName] = useState("");
+    const [batchSize,setBatchSize] = useState(0);
     const [price, setPrice] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
@@ -34,7 +35,7 @@ export const AddNewTicket = () => {
       };    
 
     const handleAddTicket = async () => {
-        if (!lotNumber || !name || !price || !userId || !token) {
+        if (!lotNumber || !batchSize || !name || !price || !userId || !token) {
           setMessage("Please fill all fields and ensure you're logged in.");
           return;
         }
@@ -56,7 +57,8 @@ export const AddNewTicket = () => {
               name,
               price,
               userId,
-              lotHint
+              lotHint,
+              batchSize
             },
             {
               headers: {
@@ -147,6 +149,15 @@ export const AddNewTicket = () => {
         onChange={(e) => setPrice(Number(e.target.value))}
         className="w-full mb-4 p-2 border rounded"
       />
+
+      <input
+        type="number"
+        placeholder="Batch Size"
+        value={batchSize}
+        onChange={(e) => setBatchSize(Number(e.target.value))}
+        className="w-full mb-4 p-2 border rounded"
+      />
+
 
       <button
         onClick={handleAddTicket}

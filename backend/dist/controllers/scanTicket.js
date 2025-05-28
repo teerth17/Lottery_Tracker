@@ -43,6 +43,7 @@ const addScanTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             ticketNumber: body.ticketNumber,
             sessionType: body.sessionType,
             ticketLotNumber: body.ticketLotNumber,
+            ticketUniqueCount: body.ticketUniqueCount,
             userId: body.userId
         }
     });
@@ -70,6 +71,7 @@ const addScanBatch = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 ticketNumber: t.ticketNumber,
                 ticketLotNumber: t.ticketLotNumber,
                 sessionType: t.sessionType,
+                ticketUniqueCount: t.ticketUniqueCount,
                 userId
             }))
         });
@@ -158,6 +160,7 @@ const getScanTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         sessionType: existScanTicket.sessionType,
         sacnnedAt: existScanTicket.scannedAt,
         ticketLotNumber: existScanTicket.ticketLotNumber,
+        ticketUniqueCount: existScanTicket.ticketUniqueCount
     });
 });
 //get most recent scanned ticket batch
@@ -226,7 +229,7 @@ const lastTicketInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(200).json({
         scannedAt: lastTicket === null || lastTicket === void 0 ? void 0 : lastTicket.scannedAt,
         ticketNumber: lastTicket === null || lastTicket === void 0 ? void 0 : lastTicket.ticketNumber,
-        SessionType: lastTicket === null || lastTicket === void 0 ? void 0 : lastTicket.sessionType
+        sessionType: lastTicket === null || lastTicket === void 0 ? void 0 : lastTicket.sessionType
     });
 });
 // getting all scanned tickets for user using pagination for scalabilty
@@ -261,6 +264,88 @@ const getAllScanTickets = (req, res) => __awaiter(void 0, void 0, void 0, functi
         nextCursor: hasMore ? results[results.length - 1].id : null
     });
 });
+// get the difference and price for the tickets
+const getSoldTicketsData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const userId = req.userId;
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const openingTickets = yield prisma.scanTicket.findMany({
+        where: {
+            sessionType: "Opening",
+            scannedAt: {
+                gte: startOfDay,
+                lte: endOfDay
+            },
+            userId
+        },
+        include: {
+            ticket: true
+        }
+    });
+    const closingTickets = yield prisma.scanTicket.findMany({
+        where: {
+            sessionType: "Closing",
+            scannedAt: {
+                gte: startOfDay,
+                lte: endOfDay
+            },
+            userId
+        },
+        include: {
+            ticket: true
+        }
+    });
+    console.log("opening tickets: " + openingTickets);
+    console.log("closing tickets;  " + closingTickets);
+    const groupByKey = (arr) => {
+        const map = new Map();
+        arr.forEach(t => {
+            const key = `${t.ticketLotNumber}-${t.ticketUniqueCount}`;
+            map.set(key, t);
+        });
+        return map;
+    };
+    const openingMap = groupByKey(openingTickets);
+    const closingMap = groupByKey(closingTickets);
+    console.log("opening tickets:sd " + openingMap.entries());
+    console.log("closing tickets;sad  " + closingMap.entries());
+    const results = [];
+    let totalRevenue = 0;
+    for (const [key, openingTicket] of openingMap.entries()) {
+        const closingTicket = closingMap.get(key);
+        if (closingTicket) {
+            const openingNum = parseInt(openingTicket.ticketNumber) % 1000;
+            const closingNum = parseInt(closingTicket.ticketNumber) % 1000;
+            console.log("oepning Num: " + openingNum);
+            console.log("closing Num: " + closingNum);
+            if (isNaN(openingNum) || isNaN(closingNum))
+                continue;
+            let diff = 0;
+            if (closingNum < openingNum) {
+                diff = (((_a = openingTicket.ticket) === null || _a === void 0 ? void 0 : _a.batchSize) - openingNum) + (closingNum);
+            }
+            else {
+                diff = (closingNum - openingNum);
+            }
+            const price = ((_b = openingTicket.ticket) === null || _b === void 0 ? void 0 : _b.price) || 0;
+            totalRevenue = totalRevenue + (diff * price);
+            results.push({
+                ticketLotNumber: openingTicket.ticketLotNumber,
+                ticketUniqueCount: openingTicket.ticketUniqueCount,
+                openingTicketNumber: openingTicket.ticketNumber,
+                closingTicketNumber: closingTicket.ticketNumber,
+                sold: diff,
+                price,
+                revenue: diff * price,
+                totalRevenue
+            });
+        }
+    }
+    res.status(200).json({ data: results });
+});
 ticketScanRouter.post("/addScanTicket", authMiddleware_1.default, addScanTicket);
 ticketScanRouter.post("/addScanBatch", authMiddleware_1.default, addScanBatch);
 ticketScanRouter.post("/deleteScanTicket", authMiddleware_1.default, deleteScanTicket);
@@ -269,4 +354,5 @@ ticketScanRouter.get("/getScanTicket", authMiddleware_1.default, getScanTicket);
 ticketScanRouter.get("/getLastScanTickets", authMiddleware_1.default, getLastScannedTickets);
 ticketScanRouter.get("/getLastTicketInfo", authMiddleware_1.default, lastTicketInfo);
 ticketScanRouter.get("/getAllScanTickets", authMiddleware_1.default, getAllScanTickets);
+ticketScanRouter.get("/getSoldTicketsData", authMiddleware_1.default, getSoldTicketsData);
 exports.default = ticketScanRouter;

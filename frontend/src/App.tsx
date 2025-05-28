@@ -11,6 +11,7 @@ import { ScanTicket } from './pages/ScanTicket'
 import { AddNewTicket } from './pages/AddNewTicket'
 import { AddScanTickets } from './pages/AddScanTickets'
 import { GetScanTickets } from './pages/GetScanTickets'
+import { SoldTicketsSummary } from './pages/SoldTicketsSummary'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -29,6 +30,8 @@ function App() {
            <Route path='/user/scanTicket' element={<ScanTicket />}></Route>
            <Route path='/user/scanTicket/scan' element = {<AddScanTickets />}></Route>
            <Route path='/user/scanTicket/getAllScans' element={<GetScanTickets />}></Route>
+
+           <Route path='/user/scanTicket/soldSummary' element={<SoldTicketsSummary />}></Route>
         </Routes>
         </BrowserRouter>
         

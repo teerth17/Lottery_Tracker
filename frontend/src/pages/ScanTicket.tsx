@@ -18,7 +18,7 @@ type ScanTicket = {
 }
 
 export const ScanTicket = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     const [searchParams]  = useSearchParams();
     const userId = searchParams.get('id') || "";
     console.log("got user id: ", userId);
@@ -59,6 +59,13 @@ export const ScanTicket = () => {
         >
           View All Scans
         </button>
+
+        <button
+  onClick={() => navigate(`/user/scanTicket/soldSummary?id=${userId}`)}
+  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+>
+  View Sold Tickets Summary
+</button>
       </div>
 
       <div>

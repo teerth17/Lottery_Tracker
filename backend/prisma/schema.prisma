@@ -27,15 +27,17 @@ model User {
 
 model Ticket{
   lotNumber String
+  uniqueCount Int
   name String
   price Int
   userId String
   lotHint String
+  batchSize Int
   user User @relation(fields: [userId],references: [id])
 
   scanTickets ScanTicket[]
 
-  @@id([userId,lotNumber])
+  @@id([userId,lotNumber,uniqueCount])
 }
 
 model ScanTicket{
@@ -45,8 +47,9 @@ model ScanTicket{
   scannedAt DateTime @default(now())
   ticketLotNumber String
   userId String
+  ticketUniqueCount Int
   
-  ticket Ticket @relation(fields: [userId,ticketLotNumber],references: [userId,lotNumber])
+  ticket Ticket @relation(fields: [userId,ticketLotNumber,ticketUniqueCount],references: [userId,lotNumber,uniqueCount])
   
   @@index([userId,scannedAt])
   @@index([userId,sessionType,scannedAt])

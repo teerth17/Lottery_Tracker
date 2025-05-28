@@ -44,6 +44,7 @@ const addScanTicket :RequestHandler = async (req:Request,res:Response) => {
             ticketNumber: body.ticketNumber,
             sessionType: body.sessionType,
             ticketLotNumber: body.ticketLotNumber,
+            ticketUniqueCount:body.ticketUniqueCount,
             userId: body.userId
         }
     })
@@ -77,6 +78,7 @@ const addScanBatch: RequestHandler = async(req: Request,res:Response) => {
                 ticketNumber: t.ticketNumber,
                 ticketLotNumber: t.ticketLotNumber,
                 sessionType: t.sessionType,
+                ticketUniqueCount:t.ticketUniqueCount,
                 userId 
             }))
         })
@@ -187,6 +189,7 @@ const getScanTicket :RequestHandler = async(req: Request,res:Response) => {
         sessionType: existScanTicket.sessionType,
         sacnnedAt: existScanTicket.scannedAt,
         ticketLotNumber: existScanTicket.ticketLotNumber,
+        ticketUniqueCount: existScanTicket.ticketUniqueCount
     })
 
 }
@@ -273,7 +276,7 @@ const lastTicketInfo: RequestHandler = async (req:Request,res:Response) =>{
     res.status(200).json({
         scannedAt: lastTicket?.scannedAt,
         ticketNumber: lastTicket?.ticketNumber,
-        SessionType: lastTicket?.sessionType
+        sessionType: lastTicket?.sessionType
     })
 } 
 
@@ -322,6 +325,105 @@ const getAllScanTickets:RequestHandler = async (req:Request,res:Response) => {
 
 }
 
+// get the difference and price for the tickets
+const getSoldTicketsData: RequestHandler = async (req:Request,res:Response) => {
+    const userId = req.userId;
+
+     const startOfDay = new Date();
+    startOfDay.setHours(0,0,0,0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23,59,59,999);
+
+    const openingTickets = await prisma.scanTicket.findMany({
+        where: {
+            sessionType: "Opening", 
+            scannedAt:{
+                gte: startOfDay,
+                lte: endOfDay
+            } ,
+            userId
+        },
+         include: {
+            ticket:true
+        }
+    })
+
+     const closingTickets = await prisma.scanTicket.findMany({
+        where: {
+            sessionType: "Closing", 
+            scannedAt:{
+                gte: startOfDay,
+                lte: endOfDay
+            } ,
+            userId
+        },
+         include: {
+            ticket:true
+        }
+    })
+
+    console.log("opening tickets: " + openingTickets)
+    console.log("closing tickets;  "  + closingTickets)
+
+    const groupByKey = (arr: any[]) => {
+        const map = new Map();
+        arr.forEach(t => {
+            const key = `${t.ticketLotNumber}-${t.ticketUniqueCount}`
+            map.set(key,t);
+        })
+        return map;
+    }
+
+    const openingMap = groupByKey(openingTickets);
+    const closingMap = groupByKey(closingTickets);
+
+     console.log("opening tickets:sd " + openingMap.entries())
+    console.log("closing tickets;sad  "  + closingMap.entries())
+
+    const results = [];
+    let totalRevenue = 0;
+
+    for(const [key,openingTicket] of openingMap.entries()){
+        const closingTicket = closingMap.get(key)
+
+        if(closingTicket){
+            const openingNum = parseInt(openingTicket.ticketNumber) % 1000;
+            const closingNum = parseInt(closingTicket.ticketNumber) % 1000;
+
+            console.log("oepning Num: " + openingNum)
+            console.log("closing Num: " + closingNum)
+
+            if (isNaN(openingNum) || isNaN(closingNum)) continue;
+
+            let diff = 0;
+            if(closingNum < openingNum){
+                diff = (openingTicket.ticket?.batchSize - openingNum) + (closingNum);
+            }else{
+                diff = (closingNum - openingNum)
+            }
+            const price = openingTicket.ticket?.price || 0;
+
+            totalRevenue = totalRevenue + (diff * price)
+
+            results.push({
+                ticketLotNumber: openingTicket.ticketLotNumber,
+                ticketUniqueCount: openingTicket.ticketUniqueCount,
+                openingTicketNumber: openingTicket.ticketNumber,
+                closingTicketNumber: closingTicket.ticketNumber,
+                sold: diff,
+                price,
+                revenue: diff * price,
+                totalRevenue
+            })
+
+        }
+    }
+    res.status(200).json({data: results})
+
+
+}
+
 ticketScanRouter.post("/addScanTicket",authMiddleware,addScanTicket);
 ticketScanRouter.post("/addScanBatch", authMiddleware,addScanBatch);
 ticketScanRouter.post("/deleteScanTicket",authMiddleware,deleteScanTicket);
@@ -330,6 +432,7 @@ ticketScanRouter.get("/getScanTicket",authMiddleware,getScanTicket);
 ticketScanRouter.get("/getLastScanTickets",authMiddleware,getLastScannedTickets)
 ticketScanRouter.get("/getLastTicketInfo", authMiddleware,lastTicketInfo);
 ticketScanRouter.get("/getAllScanTickets",authMiddleware,getAllScanTickets);
+ticketScanRouter.get("/getSoldTicketsData",authMiddleware,getSoldTicketsData);
 
 
 export default ticketScanRouter;

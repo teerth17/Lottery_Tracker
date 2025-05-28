@@ -3,16 +3,19 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BarcodeScannerBox from "../components/BarcodeScannerBox";
 
-type Ticket = {
+type Ticket = [{
   lotNumber: string;
   lotHint: string;
   name: string;
   price: number;
-};
+   batchSize: number,
+    uniqueCount: number
+}];
 type ScanTicket = {
   id: string;
   ticketNumber: string;
   ticketLotNumber: string;
+  ticketUniqueCount: number;
   sessionType: string;
   scannedAt: string;
   ticket?: Ticket;
@@ -23,8 +26,9 @@ export const AddScanTickets = () => {
   const navigate = useNavigate();
 
   const userId = searchParams.get("id") || "";
-  const [sessionType, setSessionType] = useState("Opening");
+  const [sessionType, setSessionType] = useState("");
   const [ticketNumber, setTicketNumber] = useState("");
+  const [ticketUniqueCount,setTicketUniqueCount] = useState(0);
   const [scannedTickets, setScannedTickets] = useState<ScanTicket[]>([]);
   const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState("");
@@ -57,7 +61,7 @@ export const AddScanTickets = () => {
       console.log("current date: ", currentScanDate);
 
       
-      if ( lastScanDate == currentScanDate) {
+      if ( lastScanDate == currentScanDate && response.data.sessionType == sessionType) {
         console.log("same ");
         setAlreadyScannedToday(true);
       } else {
@@ -122,6 +126,7 @@ export const AddScanTickets = () => {
         ticketNumber: t.ticketNumber,
         ticketLotNumber: t.ticketLotNumber,
         sessionType,
+        ticketUniqueCount: t.ticketUniqueCount,
         userId
       }))
 
@@ -141,6 +146,7 @@ export const AddScanTickets = () => {
 
   const handleScanFromCamera = async (scannedData: string) => {
     console.log("Scanned from camera:", scannedData);
+    scannedData = scannedData.slice(0,-2);
 
     if (alreadyScannedToday) {
       setMessage(
@@ -149,9 +155,18 @@ export const AddScanTickets = () => {
       return;
     }
 
-    if(scannedTickets.some((t) => t.ticketNumber == scannedData)){
+    if (
+      scannedTickets.some(
+        (t) =>
+          t.ticketNumber === scannedData &&
+          t.ticket &&
+          ticketUniqueCount > t.ticket.length - 1
+      )
+    ) {
       console.log("Duplicate ticket skipped.");
-      return
+      setTicketUniqueCount(0);
+      setMessage("No ticket found. You need to add the ticket First")
+      return;
     }
 
     try {
@@ -168,13 +183,24 @@ export const AddScanTickets = () => {
         }
       );
 
-      console.log("ticket response fron lotHint:  ", response.data.ticket);
-      const ticket: Ticket = response.data;
+      console.log("ticket response fron lotHint:  ", response.data);
+      const ticket: Ticket = response.data.tickets;
+
+      // unique count logic: 
+      const maxCountForLot = Math.max(-1,
+        ...scannedTickets.filter(t => t.ticketLotNumber === ticket[0].lotNumber).map(t => t.ticketUniqueCount)
+      )
+      console.log("maxCount; " + maxCountForLot)
+      const nextUniqueCount = maxCountForLot +1;
+      console.log("next count: " + nextUniqueCount)
+      setTicketUniqueCount(nextUniqueCount);
+      console.log("UNqiue count: " + ticketUniqueCount)
 
       const newTicket: ScanTicket = {
         id: crypto.randomUUID(),
         ticketNumber: scannedData,
-        ticketLotNumber: ticket.lotNumber,
+        ticketLotNumber: ticket[0].lotNumber,
+        ticketUniqueCount: nextUniqueCount, 
         sessionType,
         scannedAt: new Date().toISOString(),
         ticket,
@@ -247,23 +273,44 @@ export const AddScanTickets = () => {
         <div className="grid gap-4 mt-6">
           {scannedTickets.map((scan) => (
             <div
-              key={scan.id}
+               key={`${scan.ticketLotNumber}-${scan.ticketUniqueCount}`}
               className="border rounded-xl p-4 shadow flex justify-between items-center"
             >
               <div>
-                <p><strong>Ticket:</strong> {scan.ticket?.name}</p>
-                <p><strong>Price:</strong> ${scan.ticket?.price}</p>
+                <p><strong>Ticket:</strong> {scan.ticket?.[0]?.name}</p>
+                <p><strong>Price:</strong> ${scan.ticket?.[0]?.price}</p>
                 <p><strong>Lot:</strong> {scan.ticketLotNumber}</p>
+                <p><strong>Ticket Unique Count:</strong> {scan.ticketUniqueCount}</p>
                 <p><strong>Scanned At:</strong> {new Date(scan.scannedAt).toLocaleString()}</p>
                 <p><strong>Ticket Number:</strong> {scan.ticketNumber}</p>
                 <p><strong>Session:</strong> {scan.sessionType}</p>
               </div>
-              <button
-                onClick={() => handleDelete(scan.id)}
+
+              {scannedTickets.some(s => s.ticketLotNumber === scan.ticketLotNumber && s.ticketUniqueCount === scan.ticketUniqueCount+1) ?
+              (
+                <button
+               onClick={() => {
+          setMessage("To Delete this ticket, U need to delete all tickets with higher unique count.")
+          setTimeout(() => setMessage(""),3000)
+        }}
                 className="bg-red-500 text-white px-3 py-1 rounded"
               >
                 Delete
               </button>
+              ): (
+                
+
+               <button
+                onClick={() => {
+                  setScannedTickets(prev => prev.filter(t => !(t.ticketLotNumber === scan.ticketLotNumber && t.ticketUniqueCount === scan.ticketUniqueCount)))
+                }}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Delete
+              </button>
+              )  
+            }
+              
             </div>
           ))}
         </div>

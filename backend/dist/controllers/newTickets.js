@@ -44,20 +44,25 @@ const addNewTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             message: "incorrect inputs inside body..",
         });
     }
-    const existingTicket = yield prisma.ticket.findUnique({
-        where: {
-            userId_lotNumber: {
-                userId,
-                lotNumber: body.lotNumber
-            }
-        }
+    const last = yield prisma.ticket.findFirst({
+        where: { userId, lotNumber: body.lotNumber },
+        orderBy: { uniqueCount: 'desc' },
     });
-    if (existingTicket) {
-        res.status(400).json({
-            message: `Ticket is already added for userId: ${body.userId}`,
-        });
-        return;
-    }
+    const newCount = last ? last.uniqueCount + 1 : 0;
+    // const existingTicket = await prisma.ticket.findUnique({
+    //     where: {
+    //         userId_lotNumber: {
+    //           userId,
+    //           lotNumber: body.lotNumber
+    //         }
+    //       } 
+    // })
+    // if(existingTicket){
+    //     res.status(400).json({
+    //         message: `Ticket is already added for userId: ${body.userId}`, 
+    //     })
+    //     return
+    // }
     console.log("no existing ticketm,entering to ticket db..");
     yield prisma.ticket.create({
         data: {
@@ -65,7 +70,9 @@ const addNewTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             name: body.name,
             price: body.price,
             userId: userId,
-            lotHint: body.lotHint
+            lotHint: body.lotHint,
+            batchSize: body.batchSize,
+            uniqueCount: newCount
         }
     });
     console.log("after inserting ticket log..");
@@ -91,10 +98,12 @@ const getAllTicketsByUserId = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
     }
     res.json({
-        ticket: tickets.map(ticket => ({
+        tickets: tickets.map(ticket => ({
             lotNumber: ticket.lotNumber,
             name: ticket.name,
             price: ticket.price,
+            batchSize: ticket.batchSize,
+            uniqueCount: ticket.uniqueCount
         }))
     });
 });
@@ -107,23 +116,24 @@ const getTicketByLotNumber = (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(400).json({ message: "User ID is missing or invalid." });
         return;
     }
-    const ticket = yield prisma.ticket.findUnique({
+    const tickets = yield prisma.ticket.findMany({
         where: {
-            userId_lotNumber: {
-                userId,
-                lotNumber: body.lotNumber
-            }
+            lotNumber: body.lotNumber
         }
     });
-    if (!ticket) {
+    if (!tickets) {
         res.json({
             message: "No tickets found.."
         });
     }
     res.status(201).json({
-        lotNumber: ticket === null || ticket === void 0 ? void 0 : ticket.lotNumber,
-        name: ticket === null || ticket === void 0 ? void 0 : ticket.name,
-        price: ticket === null || ticket === void 0 ? void 0 : ticket.price,
+        tickets: tickets.map((ticket) => ({
+            lotNumber: ticket.lotNumber,
+            name: ticket === null || ticket === void 0 ? void 0 : ticket.name,
+            price: ticket === null || ticket === void 0 ? void 0 : ticket.price,
+            batchSize: ticket.batchSize,
+            uniqueCount: ticket.uniqueCount
+        })),
         message: "fetched the ticket successfully"
     });
 });
@@ -141,14 +151,14 @@ const getTicketByLotHint = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(400).json({ message: "LotHint is missing" });
         return;
     }
-    const ticket = yield prisma.ticket.findFirst({
+    const tickets = yield prisma.ticket.findMany({
         where: {
             lotHint: lotHint,
             userId: userId
         }
     });
-    console.log("ticket: ", ticket);
-    if (!ticket) {
+    console.log("ticket: ", tickets);
+    if (!tickets) {
         res.status(404).json({
             lotHint: lotHint,
             message: "No ticket found with the provided hint."
@@ -156,10 +166,13 @@ const getTicketByLotHint = (req, res) => __awaiter(void 0, void 0, void 0, funct
         return;
     }
     res.status(200).json({
-        lotNumber: ticket.lotNumber,
-        name: ticket.name,
-        price: ticket.price,
-        lotHint: ticket.lotHint,
+        tickets: tickets.map((ticket) => ({
+            lotNumber: ticket.lotNumber,
+            name: ticket === null || ticket === void 0 ? void 0 : ticket.name,
+            price: ticket === null || ticket === void 0 ? void 0 : ticket.price,
+            batchSize: ticket.batchSize,
+            uniqueCount: ticket.uniqueCount
+        })),
         message: "Fetched the ticket successfully."
     });
 });
@@ -180,9 +193,10 @@ const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     const existingTicket = yield prisma.ticket.findUnique({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
                 userId,
-                lotNumber: body.lotNumber
+                lotNumber: body.lotNumber,
+                uniqueCount: body.uniqueCount
             }
         }
     });
@@ -195,9 +209,10 @@ const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     console.log("before updating ticket info..");
     yield prisma.ticket.update({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
                 userId,
-                lotNumber: body.lotNumber
+                lotNumber: body.lotNumber,
+                uniqueCount: body.uniqueCount
             }
         },
         data: Object.assign(Object.assign({}, (body.name && { name: body.name })), (body.price && { price: body.price }))
@@ -216,9 +231,10 @@ const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     const existingTicket = yield prisma.ticket.findUnique({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
                 userId,
-                lotNumber: body.lotNumber
+                lotNumber: body.lotNumber,
+                uniqueCount: body.uniqueCount
             }
         }
     });
@@ -231,9 +247,10 @@ const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     console.log("before deleting..");
     yield prisma.ticket.delete({
         where: {
-            userId_lotNumber: {
+            userId_lotNumber_uniqueCount: {
                 userId,
-                lotNumber: body.lotNumber
+                lotNumber: body.lotNumber,
+                uniqueCount: body.uniqueCount
             }
         }
     });

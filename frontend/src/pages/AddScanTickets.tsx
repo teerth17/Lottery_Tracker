@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BarcodeScannerBox from "../components/BarcodeScannerBox";
 
@@ -31,11 +31,14 @@ export const AddScanTickets = () => {
   const [ticketUniqueCount,setTicketUniqueCount] = useState(0);
   const [scannedTickets, setScannedTickets] = useState<ScanTicket[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [scanningWithScanner, setScanningWithScanner] = useState(false);
   const [message, setMessage] = useState("");
   const [alreadyScannedToday, setAlreadyScannedToday] = useState(false);
    const [loading, setLoading] = useState(false);
   const extractLotHint = (ticketNumber: string) => ticketNumber.slice(0, 4);
   console.log("got user id: ", userId);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
+  const scanTimeout = useRef<number | null>(null);
 
   const checkingScannedToday = async () => {
     try {
@@ -159,6 +162,11 @@ export const AddScanTickets = () => {
     console.log("Scanned from camera:", scannedData);
     scannedData = scannedData.slice(0,-2);
     
+   if (scannerInputRef.current) {
+            scannerInputRef.current.value = "";
+            scannerInputRef.current.focus();
+        }
+    
 
     if (alreadyScannedToday) {
       setMessage(
@@ -176,7 +184,7 @@ export const AddScanTickets = () => {
       )
     ) {
       console.log("Duplicate ticket skipped.");
-      setTicketUniqueCount(0);
+      
       setMessage("No ticket found. You need to add the ticket First")
       return;
     }
@@ -218,6 +226,7 @@ export const AddScanTickets = () => {
         ticket,
       };
       setScannedTickets((prev) => [...prev, newTicket]);
+
     } catch (error: any) {
       setMessage("No ticket found, try again or add ticket")
       console.error("Scan failed: ", error);
@@ -227,6 +236,12 @@ export const AddScanTickets = () => {
   useEffect(() => {
     checkingScannedToday();
   }, [sessionType]);
+
+  useEffect(() => {
+    if(scanningWithScanner && scannerInputRef.current){
+      scannerInputRef.current.focus();
+    }
+  },[scanningWithScanner])
 //   return (
 //     <div className="p-4 max-w-3xl mx-auto">
 //       <button
@@ -385,7 +400,6 @@ return (
       </div>
 
       <div className="p-4 max-w-4xl mx-auto">
-        {/* Session Selection Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
@@ -454,7 +468,10 @@ return (
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Camera Scanner</h2>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                 {!scanning ? (
                   <button
                     onClick={() => setScanning(true)}
@@ -478,6 +495,31 @@ return (
                   </button>
                 )}
               </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {!scanningWithScanner ? (
+                  <button
+                    onClick={() => setScanningWithScanner(true)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 touch-manipulation flex items-center justify-center gap-3"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Scan with Scanner
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setScanningWithScanner(false)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 touch-manipulation flex items-center justify-center gap-3"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9l6 6m0-6L9 15" />
+                    </svg>
+                    Stop Scanning
+                  </button>
+                )}
+              </div>
+                </div>
 
               {scanning && (
                 <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
@@ -492,10 +534,34 @@ return (
                   {/* Replace this div with your actual BarcodeScannerBox component */}
                   <BarcodeScannerBox
             onScan={handleScanFromCamera}
-            onClose={() => setScanning(false)}
+           
           />
                   {/* <BarcodeScannerBox onScan={handleScanFromCamera} onClose={() => setScanning(false)} /> */}
                 </div>
+              )}
+
+              {scanningWithScanner && (
+                <div className="mb-4">
+                            <input
+                                ref={scannerInputRef}
+                                type="text"
+                                className="w-full px-4 py-3 border border-blue-400 rounded-xl text-lg tracking-widest bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                                placeholder="Scan barcode here..."
+                                 onChange={e => {
+    if (scanTimeout.current) clearTimeout(scanTimeout.current);
+    const value = e.currentTarget.value;
+    scanTimeout.current = setTimeout(() => {
+      if (value) {
+        handleScanFromCamera(value);
+        e.currentTarget.value = "";
+      }
+    }, 200); }}
+                                autoFocus
+                            />
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                Focus is here. Scan with your external scanner.
+                            </div>
+                        </div>
               )}
             </div>
 

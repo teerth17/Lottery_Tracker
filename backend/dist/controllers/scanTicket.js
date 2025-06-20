@@ -221,9 +221,10 @@ const lastTicketInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
     if (!lastTicket) {
-        res.status(400).json({
+        res.status(200).json({
             message: "No last scannes found..",
         });
+        return;
     }
     console.log("last ticket info: ", lastTicket);
     res.status(200).json({
@@ -240,6 +241,7 @@ const getAllScanTickets = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const sessionType = req.query.sessionType;
     const fromDate = req.query.fromDate;
     const toDate = req.query.toDate;
+    console.log("userId: " + userId);
     const where = { userId };
     if (sessionType)
         where.sessionType = sessionType;
@@ -340,11 +342,12 @@ const getSoldTicketsData = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 sold: diff,
                 price,
                 revenue: diff * price,
-                totalRevenue
             });
         }
     }
-    res.status(200).json({ data: results });
+    res.status(200).json({ data: results,
+        totalRevenue: totalRevenue
+    });
 });
 ticketScanRouter.post("/addScanTicket", authMiddleware_1.default, addScanTicket);
 ticketScanRouter.post("/addScanBatch", authMiddleware_1.default, addScanBatch);

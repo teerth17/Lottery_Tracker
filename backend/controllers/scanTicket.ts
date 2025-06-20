@@ -266,9 +266,10 @@ const lastTicketInfo: RequestHandler = async (req:Request,res:Response) =>{
     })
 
     if(!lastTicket){
-        res.status(400).json({
+        res.status(200).json({
             message: "No last scannes found..",
         })
+        return
     }
 
     console.log("last ticket info: ", lastTicket);
@@ -288,7 +289,7 @@ const getAllScanTickets:RequestHandler = async (req:Request,res:Response) => {
     const sessionType = req.query.sessionType as string | undefined;
     const fromDate = req.query.fromDate as string | undefined;
     const toDate = req.query.toDate as string | undefined;
-
+    console.log("userId: " + userId)
     const where: any = {userId};
     if(sessionType) where.sessionType = sessionType
     if(fromDate && toDate){
@@ -414,12 +415,14 @@ const getSoldTicketsData: RequestHandler = async (req:Request,res:Response) => {
                 sold: diff,
                 price,
                 revenue: diff * price,
-                totalRevenue
+                
             })
 
         }
     }
-    res.status(200).json({data: results})
+    res.status(200).json({data: results,
+        totalRevenue: totalRevenue
+    })
 
 
 }

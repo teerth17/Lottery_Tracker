@@ -15,6 +15,6 @@ app.use(cors())
 app.use("/api/v1",mainRouter)
 
 
-app.listen(port, () => {
+app.listen(port,'0.0.0.0', () => {
     console.log(`Listening to port ${port}`)
 })

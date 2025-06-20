@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Custom styles that need to work in both modes */
+body {
+  @apply antialiased;
+}
+
+/* If you need any custom styles that don't work well with Tailwind's dark mode */
+[data-theme="dark"] {
+  /* Add any additional dark mode styles here */
+}

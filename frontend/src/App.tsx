@@ -1,7 +1,4 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { SignIn } from './pages/SignIn'
 import { SignUp } from './pages/Signup'
@@ -13,30 +10,34 @@ import { AddScanTickets } from './pages/AddScanTickets'
 import { GetScanTickets } from './pages/GetScanTickets'
 import { SoldTicketsSummary } from './pages/SoldTicketsSummary'
 
+
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <BrowserRouter>
-        <Routes>
-           <Route path='/signin' element={<SignIn />}></Route>
-           <Route path='/signup' element={<SignUp />} ></Route> 
-           <Route path='/user/home' element={<Home />} ></Route>
-           <Route path='/user/newTicket' element={<NewTicket />} ></Route>
-           <Route path='/user/newTicket/add' element={<AddNewTicket />} ></Route>
-           
-           <Route path='/user/scanTicket' element={<ScanTicket />}></Route>
-           <Route path='/user/scanTicket/scan' element = {<AddScanTickets />}></Route>
-           <Route path='/user/scanTicket/getAllScans' element={<GetScanTickets />}></Route>
-
-           <Route path='/user/scanTicket/soldSummary' element={<SoldTicketsSummary />}></Route>
-        </Routes>
-        </BrowserRouter>
-        
-      </div>
-    </>
+      <BrowserRouter>
+        <div className="relative">
+  
+          <div className="min-h-screen">
+            <Routes>
+              <Route path='/signin' element={<SignIn />} />
+              <Route path='/signup' element={<SignUp />} />
+              <Route 
+                path='/user/*' 
+                element={
+                    <Routes>
+                      <Route path='home' element={<Home />} />
+                      <Route path='newTicket' element={<NewTicket />} />
+                      <Route path='newTicket/add' element={<AddNewTicket />} />
+                      <Route path='scanTicket' element={<ScanTicket />} />
+                      <Route path='scanTicket/scan' element={<AddScanTickets />} />
+                      <Route path='scanTicket/getAllScans' element={<GetScanTickets />} />
+                      <Route path='scanTicket/soldSummary' element={<SoldTicketsSummary />} />
+                    </Routes>
+                }
+              />
+            </Routes>
+          </div>
+        </div>
+      </BrowserRouter>
   )
 }
 

@@ -326,16 +326,38 @@ const getAllScanTickets:RequestHandler = async (req:Request,res:Response) => {
 
 }
 
+function parseLocalDate(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 // get the difference and price for the tickets
 const getSoldTicketsData: RequestHandler = async (req:Request,res:Response) => {
     const userId = req.userId;
 
-     const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
+   const { date } = req.query;
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23,59,59,999);
+   console.log("got this date: ", date);
 
+    let startOfDay: Date;
+    let endOfDay: Date;
+
+   if (date && typeof date === "string") {
+    startOfDay = parseLocalDate(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    endOfDay = parseLocalDate(date);
+    endOfDay.setHours(23, 59, 59, 999);
+} else {
+        // Default to today
+        startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+    }
+
+    console.log("start: " + startOfDay);
+    console.log("end: " + endOfDay);
     const openingTickets = await prisma.scanTicket.findMany({
         where: {
             sessionType: "Opening", 
@@ -410,6 +432,7 @@ const getSoldTicketsData: RequestHandler = async (req:Request,res:Response) => {
             results.push({
                 ticketLotNumber: openingTicket.ticketLotNumber,
                 ticketUniqueCount: openingTicket.ticketUniqueCount,
+                name: openingTicket.ticket.name,
                 openingTicketNumber: openingTicket.ticketNumber,
                 closingTicketNumber: closingTicket.ticketNumber,
                 sold: diff,

@@ -190,14 +190,17 @@ export const SoldTicketsSummary = () => {
     const [loading,setLoading] = useState(false);
     const [error,setError] = useState<string | null>(null)
     const navigate = useNavigate();
+    const [selectedDate,setSelectedDate] = useState(() => {
+      const today = new Date();
+      return today.toISOString().slice(0,10);
+    })
 
-    useEffect(() => {
-        const fetchSoldTickets = async () => {
+        const fetchSoldTickets = async (date:string) => {
             setLoading(true)
             setError(null)
 
             try{
-                const response = await axios.get("http://localhost:3000/api/v1/user/scanTicket/getSoldTicketsData",{
+                const response = await axios.get(`http://localhost:3000/api/v1/user/scanTicket/getSoldTicketsData?date=${date}`,{
                     headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -210,11 +213,13 @@ export const SoldTicketsSummary = () => {
                 setLoading(false)
             }
         }
-        fetchSoldTickets();
-    },[])
+     
+    useEffect(() => {
+      fetchSoldTickets(selectedDate);
+    },[selectedDate]);
 
     const downloadCSV = () => {
-        const headers = ["Lot Number", "Unique Count", "Opening Ticket", "Closing Ticket", "Sold", "Price", "Revenue"];
+        const headers = ["Lot Number", "Unique Count","Ticket Name", "Opening Ticket", "Closing Ticket", "Sold", "Price", "Revenue"];
         const rows = soldTickets.map(row => [
         row.ticketLotNumber,
         row.ticketUniqueCount,
@@ -241,6 +246,7 @@ export const SoldTicketsSummary = () => {
 
   const tableColumn = [
     "Lot Number",
+    "Ticket Name",
     "Unique Count",
     "Opening Ticket",
     "Closing Ticket",
@@ -251,6 +257,7 @@ export const SoldTicketsSummary = () => {
   const tableRows = soldTickets.map(row => [
     row.ticketLotNumber,
     row.ticketUniqueCount,
+    row.name,
     row.openingTicketNumber,
     row.closingTicketNumber,
     row.sold,
@@ -297,6 +304,20 @@ export const SoldTicketsSummary = () => {
         </div>
       </div>
 
+
+      <div className="flex items-center gap-3 mb-6">
+  <label className="text-gray-200 font-medium" htmlFor="date-picker">
+    Select Date:
+  </label>
+  <input
+    id="date-picker"
+    type="date"
+    className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:outline-none"
+    value={selectedDate}
+    onChange={e => setSelectedDate(e.target.value)}
+    max={new Date().toISOString().slice(0, 10)}
+  />
+</div>
       <div className="p-4 max-w-7xl mx-auto">
         {/* Revenue Summary Card */}
         <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-2xl p-6 mb-6 shadow-lg">
@@ -397,6 +418,7 @@ export const SoldTicketsSummary = () => {
                   <thead className="bg-gray-700">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Lot Number</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Ticket Name</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Unique Count</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Opening</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Closing</th>
@@ -409,6 +431,7 @@ export const SoldTicketsSummary = () => {
                     {soldTickets.map((ticket, idx) => (
                       <tr key={idx} className={idx % 2 === 0 ? "bg-gray-800" : "bg-gray-750 hover:bg-gray-700 transition-colors"}>
                         <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{ticket.ticketLotNumber}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{ticket.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{ticket.ticketUniqueCount}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{ticket.openingTicketNumber}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{ticket.closingTicketNumber}</td>

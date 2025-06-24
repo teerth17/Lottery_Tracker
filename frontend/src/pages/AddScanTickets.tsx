@@ -175,20 +175,8 @@ export const AddScanTickets = () => {
       return;
     }
 
-    if (
-      scannedTickets.some(
-        (t) =>
-          t.ticketNumber === scannedData &&
-          t.ticket &&
-          ticketUniqueCount > t.ticket.length - 1
-      )
-    ) {
-      console.log("Duplicate ticket skipped.");
-      
-      setMessage("No ticket found. You need to add the ticket First")
-      return;
-    }
-
+    
+    console.log("Got this count outside if: " + ticketUniqueCount);
     try {
       const lotHint = extractLotHint(scannedData);
       const response = await axios.get(
@@ -215,6 +203,21 @@ export const AddScanTickets = () => {
       console.log("next count: " + nextUniqueCount)
       setTicketUniqueCount(nextUniqueCount);
       console.log("UNqiue count: " + ticketUniqueCount)
+
+      if (
+      scannedTickets.some(
+        (t) =>
+          t.ticketNumber === scannedData &&
+          t.ticket &&
+          nextUniqueCount > t.ticket.length - 1
+      )
+    ) {
+      console.log("Got this count: " + nextUniqueCount);
+      console.log("Duplicate ticket skipped.");
+      
+      setMessage("No ticket found. You need to add the ticket First")
+      return;
+    }
 
       const newTicket: ScanTicket = {
         id: crypto.randomUUID(),

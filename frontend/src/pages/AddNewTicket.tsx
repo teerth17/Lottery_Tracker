@@ -1,8 +1,7 @@
 import axios from "axios";
-import { Html5Qrcode } from "html5-qrcode";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { BrowserMultiFormatReader } from "@zxing/library"
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
 import BarcodeScanner from "react-qr-barcode-scanner";
 
 export const AddNewTicket = () => {

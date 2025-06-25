@@ -1,10 +1,9 @@
 
 
 import axios from "axios"
-import { AuthCard } from "../components/AuthCard"
 import { TextInput } from "../components/TextInput"
-import { data, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export const SignUp = () => {
     const [email,setEmail] = useState('');

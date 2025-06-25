@@ -1,7 +1,6 @@
 import axios from "axios";
-import { AuthCard } from "../components/AuthCard";
 import { TextInput } from "../components/TextInput";
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export const SignIn = () => {

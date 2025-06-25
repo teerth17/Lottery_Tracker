@@ -42,7 +42,7 @@ export const AddScanTickets = () => {
   const checkingScannedToday = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/v1/user/scanTicket/getLastTicketInfo",
+        `${import.meta.env.VITE_API_URL}/user/scanTicket/getLastTicketInfo`,
         {
           params: {sessionType},
           headers: {
@@ -111,7 +111,7 @@ export const AddScanTickets = () => {
 
     try {
       await axios.post(
-        "http://localhost:3000/api/v1/user/scanTicket/deleteScanBatch",
+        `${import.meta.env.VITE_API_URL}/user/scanTicket/deleteScanBatch`,
         {
           userId,
           sessionType,
@@ -140,7 +140,7 @@ export const AddScanTickets = () => {
         userId
       }))
 setLoading(false);
-      await axios.post("http://localhost:3000/api/v1/user/scanTicket/addScanBatch",
+      await axios.post(`${import.meta.env.VITE_API_URL}/user/scanTicket/addScanBatch`,
         {tickets: payload},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -182,7 +182,7 @@ setLoading(false);
     try {
       const lotHint = extractLotHint(scannedData);
       const response = await axios.get(
-        "http://localhost:3000/api/v1/user/newTicket/getTicketByLotHint",
+        `${import.meta.env.VITE_API_URL}/user/newTicket/getTicketByLotHint`,
         {
           params: {
             lotHint,

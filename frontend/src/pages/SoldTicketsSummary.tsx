@@ -20,7 +20,7 @@
 //             setError(null)
 
 //             try{
-//                 const response = await axios.get("http://localhost:3000/api/v1/user/scanTicket/getSoldTicketsData",{
+//                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/scanTicket/getSoldTicketsData`,{
 //                     headers: {
 //                 Authorization: `Bearer ${token}`,
 //             },
@@ -200,10 +200,10 @@ export const SoldTicketsSummary = () => {
             setError(null)
 
             try{
-                const response = await axios.get(`http://localhost:3000/api/v1/user/scanTicket/getSoldTicketsData?date=${date}`,{
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/scanTicket/getSoldTicketsData?date=${date}`, {
                     headers: {
-                Authorization: `Bearer ${token}`,
-            },
+                        Authorization: `Bearer ${token}`
+                    }
                 })
                 setSoldTickets(response.data.data)
                 setTotalRevenue(response.data.totalRevenue);

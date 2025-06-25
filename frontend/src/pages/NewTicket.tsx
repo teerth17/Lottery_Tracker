@@ -29,7 +29,7 @@ export const NewTicket = () => {
 
     const getAllTickets = async () => {
         try {
-            const response = await axios.get("http://localhost:3000/api/v1/user/newTicket/getAllTickets",{
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/newTicket/getAllTickets`,{
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -43,7 +43,7 @@ export const NewTicket = () => {
 
     const deleteTicket = async (lotNumber:string,uniqueCount:number) => {
         try{
-            const response = await axios.post("http://localhost:3000/api/v1/user/newTicket/deleteTicket",
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/user/newTicket/deleteTicket`,
                 {
                     lotNumber,
                     uniqueCount
@@ -74,7 +74,7 @@ export const NewTicket = () => {
     const updateTicket = async () => {
         if(!editingLotNumber) return;
         try{
-            const response = await axios.put("http://localhost:3000/api/v1/user/newTicket/updateTicket",
+            const response = await axios.put(`${import.meta.env.VITE_API_URL}/user/newTicket/updateTicket`,
                 {
                     lotNumber: editingLotNumber,
                     name: editName,

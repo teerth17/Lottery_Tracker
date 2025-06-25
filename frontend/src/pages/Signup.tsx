@@ -24,7 +24,7 @@ export const SignUp = () => {
               setLoading(true);
               setMessage("");
             try {
-                const response = await axios.post("http://localhost:3000/api/v1/user/signup", {
+                const response = await axios.post(`${import.meta.env.VITE_API_URL}/user/signup`, {
                   email,
                   firstname,
                   lastname,

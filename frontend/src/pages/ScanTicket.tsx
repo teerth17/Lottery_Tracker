@@ -31,7 +31,7 @@ export const ScanTicket = () => {
     const getLastScanBatch  = async () => {
 
       try {
-        const response = await axios.get("http://localhost:3000/api/v1/user/scanTicket/getLastScanTickets", {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/user/scanTicket/getLastScanTickets`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -165,7 +165,7 @@ export const GetScanTickets = () => {
         setLoading(true);
 
         try {
-            const res = await axios.get("http://localhost:3000/api/v1/user/scanTicket/getAllScanTickets",{
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/scanTicket/getAllScanTickets`,{
                 params: {
                     take: 20,
                     cursor: reset ? null : nextCursor,

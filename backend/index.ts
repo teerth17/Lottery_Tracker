@@ -9,9 +9,19 @@ dotenv.config();
 const port = 3000;
 const app = express();
 
+const corsOptions = {
+    origin: [
+      'http://localhost:5173', // Your local development frontend
+      'https://lottery-tracker-five.vercel.app', // Your Vercel frontend
+      'http://13.218.58.81:3000' // Your backend itself
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  };
 
 app.use(express.json());
-app.use(cors())
+app.use(cors(corsOptions))
 app.use("/api/v1",mainRouter)
 
 

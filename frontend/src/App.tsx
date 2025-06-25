@@ -33,6 +33,8 @@ function App() {
                     </Routes>
                 }
               />
+              // Add this at the beginning of your Routes
+              <Route path='/' element={<SignIn />}/>
             </Routes>
           </div>
         </div>

@@ -10,7 +10,6 @@ export const SignUp = () => {
     const [firstname,setFirstname] = useState('');
     const[lastname,setLastname] = useState('');
     const [password,setPassword] = useState('');
-    const [error, setError] = useState("");
     const navigate = useNavigate();
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
@@ -19,7 +18,7 @@ export const SignUp = () => {
         const handleSignup= async () => {
 
             if (!email || !firstname || !lastname || !password) {
-                setError("Please fill out all fields.");
+                setMessage("Please fill out all fields.");
                 return;
               }
               setLoading(true);

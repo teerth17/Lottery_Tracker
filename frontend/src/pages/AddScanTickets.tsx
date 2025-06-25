@@ -27,7 +27,6 @@ export const AddScanTickets = () => {
 
   const userId = searchParams.get("id") || "";
   const [sessionType, setSessionType] = useState("Opening");
-  const [ticketNumber, setTicketNumber] = useState("");
   const [ticketUniqueCount,setTicketUniqueCount] = useState(0);
   const [scannedTickets, setScannedTickets] = useState<ScanTicket[]>([]);
   const [scanning, setScanning] = useState(false);
@@ -82,23 +81,23 @@ export const AddScanTickets = () => {
     }
   };
 
-  const handleDelete = async (scanId: string) => {
-    console.log("got this scanId: ", scanId);
-    try {
-      await axios.post(
-        "http://localhost:3000/api/v1/user/scanTicket/deleteScanTicket",
-        {
-          id: scanId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setScannedTickets((prev) => prev.filter((scan) => scan.id !== scanId));
-    } catch (error) {
-      console.error("Failed to delete scan:", error);
-    }
-  };
+  // const handleDelete = async (scanId: string) => {
+  //   console.log("got this scanId: ", scanId);
+  //   try {
+  //     await axios.post(
+  //       "http://localhost:3000/api/v1/user/scanTicket/deleteScanTicket",
+  //       {
+  //         id: scanId,
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     setScannedTickets((prev) => prev.filter((scan) => scan.id !== scanId));
+  //   } catch (error) {
+  //     console.error("Failed to delete scan:", error);
+  //   }
+  // };
 
   const handleDeleteBatch = async () => {
     console.log("got into handlet delete batch..");
@@ -132,6 +131,7 @@ export const AddScanTickets = () => {
   const handleSave = async () => {
     
     try{
+      setLoading(true);
       const payload = scannedTickets.map((t) => ({
         ticketNumber: t.ticketNumber,
         ticketLotNumber: t.ticketLotNumber,
@@ -139,7 +139,7 @@ export const AddScanTickets = () => {
         ticketUniqueCount: t.ticketUniqueCount,
         userId
       }))
-
+setLoading(false);
       await axios.post("http://localhost:3000/api/v1/user/scanTicket/addScanBatch",
         {tickets: payload},
         {
@@ -155,6 +155,8 @@ export const AddScanTickets = () => {
       console.error("Failed to save batch:", error);
       setMessage("Failed to save tickets");
       setTimeout(() => setMessage(""), 3000);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -586,7 +588,7 @@ return (
                 </div>
 
                 <div className="space-y-4">
-                  {scannedTickets.map((scan, index) => (
+                  {scannedTickets.map((scan) => (
                     <div
                       key={`${scan.ticketLotNumber}-${scan.ticketUniqueCount}`}
                       className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:border-gray-300 dark:hover:border-gray-500 transition-colors duration-200"

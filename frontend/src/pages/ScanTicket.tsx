@@ -30,14 +30,21 @@ export const ScanTicket = () => {
 
     const getLastScanBatch  = async () => {
 
+      try {
         const response = await axios.get("http://localhost:3000/api/v1/user/scanTicket/getLastScanTickets", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-
-        console.log('resoponse from last batch tickets: ', response.data)
-        setLastScannedTickets(response.data.tickets)
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('response from last batch tickets: ', response.data);
+        setLastScannedTickets(response.data.tickets);
+        setMessage("Successfully loaded last scanned tickets");
+        setTimeout(() => setMessage(""), 3000);
+      } catch (error) {
+        console.error('Failed to fetch last scanned tickets:', error);
+        setMessage("Failed to load last scanned tickets");
+        setTimeout(() => setMessage(""), 3000);
+      }
     }
 
     useEffect(() => {

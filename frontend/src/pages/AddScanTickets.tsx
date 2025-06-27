@@ -37,7 +37,7 @@ export const AddScanTickets = () => {
   const extractLotHint = (ticketNumber: string) => ticketNumber.slice(0, 4);
   console.log("got user id: ", userId);
   const scannerInputRef = useRef<HTMLInputElement>(null);
-  const scanTimeout = useRef<number | null>(null);
+  const scanTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const checkingScannedToday = async () => {
     try {

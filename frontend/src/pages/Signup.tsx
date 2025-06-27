@@ -96,7 +96,10 @@ export const SignUp = () => {
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center tracking-tight">
             Create your account
           </h2>
-          <form onSubmit={handleSignup} className="space-y-2">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSignup();
+          }} className="space-y-2">
             <TextInput
               label="First Name"
               type="text"
